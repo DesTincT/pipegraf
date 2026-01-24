@@ -1,0 +1,66 @@
+---
+description: Global project standards (Maxgraf)
+alwaysApply: true
+---
+
+# Global project rules
+
+## General
+- This is an open-source Node.js/TypeScript project.
+- Code quality, clarity, and maintainability are higher priority than feature completeness.
+- All changes must compile and be testable.
+
+## Workflow
+### NO DISCUSSION MODE
+- Do not explain decisions.
+- Do not write essays or commentary.
+- Only make code changes and produce the required final report.
+
+### ONE-PR RULE
+- Each task implements exactly one coherent slice of functionality.
+- Keep diffs minimal and focused.
+- If additional work is needed, stop and wait for the next instruction.
+
+## Style (B)
+- Classes are allowed ONLY for `Maxgraf` and `Context`.
+- All other logic must use pure functions or simple objects.
+- Avoid inheritance; prefer composition.
+
+## Dependencies
+- Do not add dependencies unless explicitly instructed.
+- Prefer the standard library over third-party utilities.
+- Keep runtime dependencies and dev dependencies clearly separated.
+
+## Type safety
+- TypeScript strict mode is mandatory.
+- Avoid `any`. Use `unknown` only when unavoidable and narrow immediately.
+- Public APIs must be fully typed.
+
+## Anti-AI code quality rules (mandatory)
+1) No overengineering or speculative abstractions.
+2) Conventional naming; no vague or “clever” identifiers.
+3) Minimal surface area; export only what is necessary.
+4) Small, focused files; one responsibility per file.
+5) No verbose docstrings; comments explain "why", not "what".
+6) No unused options, configs, or placeholder scaffolding.
+7) Deterministic behavior; avoid magic and hidden side effects.
+8) Avoid “AI smells”:
+   - no giant switch statements for future cases
+   - no generic utility grab-bags
+   - no configuration objects “for later”
+9) Prefer boring, explicit code over cleverness.
+
+## Testing
+- Every core behavior must be covered by unit tests.
+- Tests must assert behavior, not implementation details.
+- Include at least one negative-path test where applicable.
+- No snapshot tests unless explicitly requested.
+
+## Final report (required for every task)
+- Changed:
+- Not changed:
+- Risk:
+
+Plus:
+- file tree created/changed
+- how to run tests or examples

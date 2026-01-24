@@ -1,0 +1,131 @@
+{
+  "name": "maxgraf",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepare": "husky",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "latest",
+    "@commitlint/config-conventional": "latest",
+    "@eslint/js": "latest",
+    "@types/node": "latest",
+    "eslint": "latest",
+    "eslint-config-prettier": "latest",
+    "husky": "latest",
+    "prettier": "latest",
+    "tsup": "latest",
+    "typescript-eslint": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ],
+    "parserPreset": {
+      "name": "@commitlint/config-conventional",
+      "opts": {
+        "noteKeywords": [
+          "BREAKING CHANGE",
+          "BREAKING CHANGES",
+          "BREAKING"
+        ]
+      }
+    },
+    "rules": {
+      "type-enum": [
+        2,
+        "always",
+        [
+          "feat",
+          "fix",
+          "docs",
+          "style",
+          "refactor",
+          "perf",
+          "test",
+          "build",
+          "ci",
+          "chore",
+          "revert"
+        ]
+      ],
+      "type-case": [
+        2,
+        "always",
+        "lower-case"
+      ],
+      "scope-enum": [
+        2,
+        "always",
+        [
+          "api",
+          "webapp",
+          "infra",
+          "repo"
+        ]
+      ],
+      "scope-empty": [
+        2,
+        "never"
+      ],
+      "scope-case": [
+        2,
+        "always",
+        "kebab-case"
+      ],
+      "subject-case": [
+        2,
+        "always",
+        [
+          "lower-case"
+        ]
+      ],
+      "subject-full-stop": [
+        2,
+        "never",
+        "."
+      ],
+      "header-max-length": [
+        2,
+        "always",
+        72
+      ],
+      "body-leading-blank": [
+        2,
+        "always"
+      ],
+      "footer-leading-blank": [
+        2,
+        "always"
+      ]
+    }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
