@@ -37,5 +37,23 @@ describe('Maxgraf sugar API', () => {
 
     expect(calls).toEqual([{ text: 'hi', extra }]);
   });
+
+  it('hears/command sugar registers Composer routing without importing Composer', async () => {
+    const calls: string[] = [];
+    const bot = new Maxgraf({ sender: async () => undefined });
+
+    bot.hears('hi', async () => {
+      calls.push('hears');
+    });
+
+    bot.command('hipster', async () => {
+      calls.push('command');
+    });
+
+    await bot.handleUpdate({ message: { text: 'hi' } });
+    await bot.handleUpdate({ message: { text: '/hipster' } });
+
+    expect(calls).toEqual(['hears', 'command']);
+  });
 });
 

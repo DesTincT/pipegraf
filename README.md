@@ -17,12 +17,12 @@ Maxgraf.js exists to provide a small, deterministic framework layer focused on D
 ## Features (current, implemented)
 
 - **Middleware pipeline**: Koa-style `(ctx, next)` middleware composition
-- **Routing helpers**: `Composer.on`, `Composer.hears`, `Composer.command`, `Composer.action`
+- **Routing helpers**: `bot.on`, `bot.hears`, `bot.command`, `bot.action`
 - **Sugar API**: `bot.start`, `bot.help`, `Maxgraf.reply(...)`
 - **Slash-only command parsing**: commands match `/name` (not `name`)
-- **`ctx.reply()` via official MAX SDK**: inject `maxApi` and call `ctx.reply(...)`
-- **Polling + webhook**: polling controller and webhook callback
-- **TTL-based update deduplication**: in-memory `update_id` TTL store for polling
+- **`ctx.reply()` via official MAX SDK**: handled internally when launching with a token
+- **Polling + webhook**: `bot.launch({ polling })` and `bot.webhookCallback()`
+- **TTL-based update deduplication**: in-memory `update_id` TTL store (polling)
 - **Deterministic behavior**: stable middleware order, no hidden concurrency
 - **Error boundary**: `bot.catch((err, ctx) => ...)`
 
@@ -31,37 +31,17 @@ Maxgraf.js exists to provide a small, deterministic framework layer focused on D
 This project does not assume npm publishing yet. The snippet below shows usage assuming `maxgraf` is available in your project.
 
 ```ts
-import { Bot as MaxBotSdk } from '@maxhub/max-bot-api';
-import { Composer, Maxgraf } from 'maxgraf';
+import { Maxgraf } from 'maxgraf';
 
 const token = process.env.MAX_BOT_TOKEN;
 if (!token) throw new Error('MAX_BOT_TOKEN is required');
 
-const sdk = new MaxBotSdk(token);
-
-function toFrameworkUpdate(update: any) {
-  const messageText = update?.message?.body?.text ?? undefined;
-  const chatId = update?.chat_id ?? update?.message?.recipient?.chat_id ?? undefined;
-  const callbackData = update?.callback?.payload ?? undefined;
-
-  return {
-    update_type: update?.update_type,
-    timestamp: update?.timestamp,
-    chat_id: typeof chatId === 'number' ? chatId : undefined,
-    message:
-      typeof messageText === 'string'
-        ? { text: messageText, recipient: { chat_id: typeof chatId === 'number' ? chatId : undefined } }
-        : undefined,
-    callback_query: typeof callbackData === 'string' ? { data: callbackData } : undefined,
-  };
-}
-
-const bot = new Maxgraf({ maxApi: sdk.api });
+const bot = new Maxgraf(token);
 
 bot.start(async (ctx) => await ctx.reply('Welcome'));
 bot.help(async (ctx) => await ctx.reply('Help: /start /help /hipster'));
-bot.use(Composer.hears('hi', async (ctx) => await ctx.reply('Hey there')));
-bot.use(Composer.command('hipster', Maxgraf.reply('λ')));
+bot.hears('hi', async (ctx) => await ctx.reply('Hey there'));
+bot.command('hipster', Maxgraf.reply('λ'));
 
 bot.catch(async (err, ctx) => {
   console.error(err);
@@ -72,19 +52,10 @@ bot.catch(async (err, ctx) => {
   }
 });
 
-let marker: string | undefined;
-const controller = bot.startPolling({
-  intervalMs: 250,
-  dedupe: { ttlMs: 60_000 },
-  getUpdates: async () => {
-    const res = await sdk.api.getUpdates(undefined, marker === undefined ? undefined : { marker });
-    marker = res.marker;
-    return res.updates.map(toFrameworkUpdate);
-  },
-});
+await bot.launch({ polling: { intervalMs: 250, dedupeTtlMs: 60_000 } });
 
-process.once('SIGINT', () => void controller.stop());
-process.once('SIGTERM', () => void controller.stop());
+process.once('SIGINT', () => void bot.stop());
+process.once('SIGTERM', () => void bot.stop());
 ```
 
 ## Feature comparison
@@ -97,9 +68,9 @@ process.once('SIGTERM', () => void controller.stop());
 | Slash command handling | ✅ | ✅ | ✅ |
 | `ctx.reply` | ✅ | ✅ | ✅ |
 | `ctx.command` / `ctx.args` | ✅ | ⚠️ | ✅ |
-| Session support | ✅ | ❌ | ✅ |
-| Scenes / dialogs | ✅ | ❌ | ✅ |
-| Wizard flows | ✅ | ❌ | ✅ |
+| Session support | ✅ | ✅ | ✅ |
+| Scenes / dialogs | ✅ | ✅ | ✅ |
+| Wizard flows | ✅ | ✅ | ✅ |
 | Testing helpers | ✅ | ⚠️ | ✅ |
 | Update deduplication (TTL) | ⚠️ | ✅ | ✅ |
 | Deterministic behavior | ⚠️ | ✅ | ✅ |
