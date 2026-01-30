@@ -102,24 +102,6 @@ export function action(triggers: Trigger | readonly Trigger[], ...mws: readonly 
   });
 }
 
-type BotCommandEntity = {
-  type: 'bot_command';
-  offset: number;
-  length: number;
-};
-
-function isBotCommandEntity(value: unknown): value is BotCommandEntity {
-  if (typeof value !== 'object' || value === null) return false;
-  const record = value as Record<string, unknown>;
-  return record['type'] === 'bot_command' && typeof record['offset'] === 'number' && typeof record['length'] === 'number';
-}
-
-function getEntitiesFromMessage(message: Record<string, unknown> | undefined): readonly unknown[] | undefined {
-  if (!message) return undefined;
-  const entities = message['entities'];
-  return Array.isArray(entities) ? entities : undefined;
-}
-
 export function command(commands: string | readonly string[], ...mws: readonly Middleware<Context>[]): Middleware<Context> {
   const commandList = asReadonlyArray(commands).map((c) => (c.startsWith('/') ? c.slice(1) : c));
   const handler = compose(mws);
@@ -128,24 +110,20 @@ export function command(commands: string | readonly string[], ...mws: readonly M
     const text = ctx.messageText;
     if (text === undefined) return await next();
 
-    const entities = getEntitiesFromMessage(ctx.message);
-    if (!entities || entities.length === 0) return await next();
+    if (!text.startsWith('/')) return await next();
 
-    const first = entities[0];
-    if (!isBotCommandEntity(first)) return await next();
-    if (first.offset !== 0) return await next();
+    const tokenEnd = text.search(/\s/);
+    const token = tokenEnd === -1 ? text : text.slice(0, tokenEnd);
+    const raw = token.slice(1);
+    if (!raw) return await next();
 
-    const token = text.slice(0, first.length);
-    if (!token.startsWith('/')) return await next();
-
-    const rawName = token.slice(1);
-    const [name] = rawName.split('@', 1);
+    const [name] = raw.split('@', 1);
     if (!name) return await next();
 
     if (!commandList.includes(name)) return await next();
 
     ctx.command = name;
-    ctx.payload = text.slice(first.length).trim();
+    ctx.payload = tokenEnd === -1 ? '' : text.slice(tokenEnd).trim();
     return await handler(ctx, next);
   });
 }

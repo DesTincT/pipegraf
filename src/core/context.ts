@@ -1,6 +1,6 @@
 import { getReplyTargetFromUpdate, sendReply, type MaxBotApi } from '../max/sdk.js';
 
-export type ReplySender = (ctx: Context, text: string) => Promise<unknown> | unknown;
+export type ReplySender = (ctx: Context, text: string, extra?: unknown) => Promise<unknown> | unknown;
 
 type SenderOptions = {
   sender?: ReplySender;
@@ -66,9 +66,9 @@ export class Context {
     return 'unknown';
   }
 
-  async reply(text: string): Promise<unknown> {
+  async reply(text: string, extra?: unknown): Promise<unknown> {
     if (this.#sender) {
-      return await Promise.resolve(this.#sender(this, text));
+      return await Promise.resolve(this.#sender(this, text, extra));
     }
 
     if (this.#maxApi) {

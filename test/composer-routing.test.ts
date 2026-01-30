@@ -72,11 +72,10 @@ describe('Composer routing', () => {
     expect(calls).toEqual(['hit']);
   });
 
-  it('command matches bot_command entity at offset 0 and sets ctx.command + ctx.payload', async () => {
+  it('command matches only with leading slash and sets ctx.command + ctx.payload', async () => {
     const ctx = new Context({
       message: {
         text: '/start hello',
-        entities: [{ type: 'bot_command', offset: 0, length: 6 }],
       },
     });
 
@@ -90,7 +89,7 @@ describe('Composer routing', () => {
     await fn(ctx);
   });
 
-  it('command does not match without entity or when offset is not 0', async () => {
+  it('command does not match without leading slash', async () => {
     const calls: string[] = [];
 
     const fn = compose<Context>([
@@ -102,24 +101,8 @@ describe('Composer routing', () => {
       },
     ]);
 
-    await fn(
-      new Context({
-        message: {
-          text: '/start hello',
-          entities: [],
-        },
-      }),
-    );
+    await fn(new Context({ message: { text: 'start hello' } }));
 
-    await fn(
-      new Context({
-        message: {
-          text: '/start hello',
-          entities: [{ type: 'bot_command', offset: 1, length: 6 }],
-        },
-      }),
-    );
-
-    expect(calls).toEqual(['fallback', 'fallback']);
+    expect(calls).toEqual(['fallback']);
   });
 });

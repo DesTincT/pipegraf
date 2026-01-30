@@ -1,4 +1,5 @@
 import { compose, type Middleware } from './compose.js';
+import { Composer } from './composer.js';
 import { Context, type ReplySender } from './context.js';
 import { createPollingController, type PollingController, type PollingOptions } from '../transports/polling.js';
 import { createWebhookCallback, type WebhookCallback, type WebhookOptions } from '../transports/webhook.js';
@@ -53,6 +54,18 @@ export class Maxgraf {
 
   webhookCallback(options?: WebhookOptions): WebhookCallback {
     return createWebhookCallback(this, options);
+  }
+
+  start(...mws: readonly Middleware<Context>[]): this {
+    return this.use(Composer.command('start', ...mws));
+  }
+
+  help(...mws: readonly Middleware<Context>[]): this {
+    return this.use(Composer.command('help', ...mws));
+  }
+
+  static reply(text: string, extra?: unknown): Middleware<Context> {
+    return async (ctx) => await ctx.reply(text, extra);
   }
 
   #getComposed(): (ctx: Context) => Promise<unknown> {
