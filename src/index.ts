@@ -18,3 +18,9 @@ export type { PollingController, PollingGetUpdates, PollingOptions } from './tra
 
 export { createWebhookCallback } from './transports/webhook.js';
 export type { WebhookCallback, WebhookOptions } from './transports/webhook.js';
+
+export { createMaxBotApi } from './max/client.js';
+export type { CreateMaxBotApiOptions } from './max/client.js';
+
+export { sendReply, getChatIdFromUpdate, getReplyTargetFromUpdate } from './max/sdk.js';
+export type { MaxBotApi, ReplyTarget, SendReplyParams } from './max/sdk.js';

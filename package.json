@@ -36,11 +36,12 @@
     "husky": "latest",
     "prettier": "latest",
     "tsup": "latest",
-    "typescript-eslint": "latest",
     "typescript": "latest",
+    "typescript-eslint": "latest",
     "vitest": "latest"
   },
   "dependencies": {
+    "@maxhub/max-bot-api": "^0.2.1",
     "fastify": "latest"
   },
   "commitlint": {

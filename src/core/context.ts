@@ -1,7 +1,10 @@
+import { getReplyTargetFromUpdate, sendReply, type MaxBotApi } from '../max/sdk.js';
+
 export type ReplySender = (ctx: Context, text: string) => Promise<unknown> | unknown;
 
 type SenderOptions = {
   sender?: ReplySender;
+  maxApi?: MaxBotApi;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -17,6 +20,7 @@ function getNestedRecord(value: unknown, key: string): Record<string, unknown> |
 export class Context {
   readonly update: unknown;
   readonly #sender?: ReplySender;
+  readonly #maxApi?: MaxBotApi;
 
   match?: RegExpMatchArray;
   command?: string;
@@ -25,6 +29,7 @@ export class Context {
   constructor(update: unknown, options: SenderOptions = {}) {
     this.update = update;
     this.#sender = options.sender;
+    this.#maxApi = options.maxApi;
   }
 
   get message(): Record<string, unknown> | undefined {
@@ -62,9 +67,18 @@ export class Context {
   }
 
   async reply(text: string): Promise<unknown> {
-    if (!this.#sender) {
-      throw new Error('NotImplemented');
+    if (this.#sender) {
+      return await Promise.resolve(this.#sender(this, text));
     }
-    return await Promise.resolve(this.#sender(this, text));
+
+    if (this.#maxApi) {
+      const target = getReplyTargetFromUpdate(this.update);
+      if (!target) {
+        throw new Error('NotImplemented');
+      }
+      return await sendReply(this.#maxApi, { target, text });
+    }
+
+    throw new Error('NotImplemented');
   }
 }
