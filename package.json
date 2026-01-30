@@ -40,6 +40,9 @@
     "typescript": "latest",
     "vitest": "latest"
   },
+  "dependencies": {
+    "fastify": "latest"
+  },
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"
@@ -81,8 +84,8 @@
         2,
         "always",
         [
-          "api",
-          "webapp",
+          "composer",
+          "core",
           "infra",
           "repo"
         ]
