@@ -22,6 +22,12 @@ export class Context {
     enter: (name: string) => Promise<void>;
     leave: () => Promise<void>;
   };
+  wizard?: {
+    step: number;
+    next: () => Promise<void>;
+    back: () => Promise<void>;
+    selectStep: (n: number) => Promise<void>;
+  };
 
   constructor(update: unknown, options: SenderOptions = {}) {
     this.update = update;

@@ -30,3 +30,5 @@ export type { SessionData, SessionOptions, SessionStore } from './middleware/ses
 
 export { createScene, createStage } from './scenes/index.js';
 export type { Scene, Stage } from './scenes/index.js';
+
+export { createWizard } from './scenes/index.js';
