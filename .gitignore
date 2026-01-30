@@ -28,6 +28,7 @@ pnpm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
+maxgraf.code-workspace
 
 # caches
 .eslintcache
