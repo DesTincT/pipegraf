@@ -24,3 +24,6 @@ export type { CreateMaxBotApiOptions } from './max/client.js';
 
 export { sendReply, getChatIdFromUpdate, getReplyTargetFromUpdate } from './max/sdk.js';
 export type { MaxBotApi, ReplyTarget, SendReplyParams } from './max/sdk.js';
+
+export { getSessionKey, session } from './middleware/session.js';
+export type { SessionData, SessionOptions, SessionStore } from './middleware/session.js';

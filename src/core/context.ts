@@ -25,6 +25,7 @@ export class Context {
   match?: RegExpMatchArray;
   command?: string;
   payload?: string;
+  session?: Record<string, unknown>;
 
   constructor(update: unknown, options: SenderOptions = {}) {
     this.update = update;
