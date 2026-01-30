@@ -11,6 +11,10 @@ coverage/
 # env files
 .env
 .env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # logs
 *.log
@@ -24,4 +28,15 @@ pnpm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
+
+# caches
+.eslintcache
+.pnpm-store/
+
+# archives
+*.tgz
+
+# temp files
+*.swp
+*.swo
 

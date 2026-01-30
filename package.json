@@ -1,7 +1,19 @@
 {
   "name": "maxgraf",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DesTincT/maxgrafjs.git"
+  },
+  "keywords": [
+    "max",
+    "bot",
+    "framework",
+    "nodejs",
+    "telegraf-inspired"
+  ],
   "type": "module",
   "files": [
     "dist"
