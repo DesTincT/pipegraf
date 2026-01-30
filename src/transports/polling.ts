@@ -1,3 +1,6 @@
+import type { UpdateHandler } from '../core/types.js';
+import { isRecord } from '../utils/index.js';
+
 export type PollingGetUpdates = (params: { offset?: number; signal: AbortSignal }) => Promise<readonly unknown[]>;
 
 export type PollingOptions = {
@@ -12,14 +15,6 @@ export type PollingController = {
   stop: () => Promise<void>;
   isRunning: () => boolean;
 };
-
-export type UpdateHandler = {
-  handleUpdate: (update: unknown) => Promise<unknown>;
-};
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
 
 function defaultGetUpdateId(update: unknown): number | undefined {
   if (!isRecord(update)) return undefined;

@@ -27,3 +27,6 @@ export type { MaxBotApi, ReplyTarget, SendReplyParams } from './max/sdk.js';
 
 export { getSessionKey, session } from './middleware/session.js';
 export type { SessionData, SessionOptions, SessionStore } from './middleware/session.js';
+
+export { createScene, createStage } from './scenes/index.js';
+export type { Scene, Stage } from './scenes/index.js';

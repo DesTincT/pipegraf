@@ -1,4 +1,5 @@
 import { getReplyTargetFromUpdate, sendReply, type MaxBotApi } from '../max/sdk.js';
+import { getNestedRecord } from '../utils/index.js';
 
 export type ReplySender = (ctx: Context, text: string, extra?: unknown) => Promise<unknown> | unknown;
 
@@ -6,16 +7,6 @@ type SenderOptions = {
   sender?: ReplySender;
   maxApi?: MaxBotApi;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function getNestedRecord(value: unknown, key: string): Record<string, unknown> | undefined {
-  if (!isRecord(value)) return undefined;
-  const nested = value[key];
-  return isRecord(nested) ? nested : undefined;
-}
 
 export class Context {
   readonly update: unknown;
@@ -26,6 +17,11 @@ export class Context {
   command?: string;
   payload?: string;
   session?: Record<string, unknown>;
+  scene?: {
+    current: string | null;
+    enter: (name: string) => Promise<void>;
+    leave: () => Promise<void>;
+  };
 
   constructor(update: unknown, options: SenderOptions = {}) {
     this.update = update;

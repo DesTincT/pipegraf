@@ -1,8 +1,5 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
-
-type UpdateHandler = {
-  handleUpdate: (update: unknown) => Promise<unknown>;
-};
+import type { UpdateHandler } from '../core/types.js';
 
 export type RegisterFastifyWebhookOptions = {
   path?: string;

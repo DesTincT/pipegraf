@@ -1,16 +1,9 @@
 import type { Message, Update } from '@maxhub/max-bot-api/types';
+import { getNumber, isRecord } from '../utils/index.js';
 
 export type MaxBotApi = {
   sendMessageToChat: (chatId: number, text: string) => Promise<Message>;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function getNumber(value: unknown): number | undefined {
-  return typeof value === 'number' ? value : undefined;
-}
 
 // Verified from @maxhub/max-bot-api Update types:
 // - many updates include top-level `chat_id: number`

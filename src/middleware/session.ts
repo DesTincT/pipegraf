@@ -1,5 +1,6 @@
 import type { Middleware } from '../core/compose.js';
 import type { Context } from '../core/context.js';
+import { getNumber, isRecord } from '../utils/index.js';
 
 export type SessionData = Record<string, unknown>;
 
@@ -11,14 +12,6 @@ export type SessionOptions<T extends SessionData> = {
   createSession?: () => T;
   fallbackKey?: string;
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function getNumber(value: unknown): number | undefined {
-  return typeof value === 'number' ? value : undefined;
-}
 
 function getChatId(update: unknown): number | undefined {
   if (!isRecord(update)) return undefined;
