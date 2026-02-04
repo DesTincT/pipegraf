@@ -10,9 +10,6 @@ export type { Filter, Trigger } from './core/composer.js';
 export { Maxgraf } from './core/maxgraf.js';
 export type { ErrorHandler, MaxgrafOptions } from './core/maxgraf.js';
 
-export { registerFastifyWebhook } from './adapters/fastify.js';
-export type { RegisterFastifyWebhookOptions } from './adapters/fastify.js';
-
 export { createPollingController } from './transports/polling.js';
 export type { PollingController, PollingGetUpdates, PollingOptions } from './transports/polling.js';
 

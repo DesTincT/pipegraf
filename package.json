@@ -51,6 +51,7 @@
     "@types/node": "latest",
     "eslint": "latest",
     "eslint-config-prettier": "latest",
+    "fastify": "latest",
     "husky": "latest",
     "prettier": "latest",
     "tsup": "latest",
@@ -59,8 +60,7 @@
     "vitest": "latest"
   },
   "dependencies": {
-    "@maxhub/max-bot-api": "^0.2.1",
-    "fastify": "latest"
+    "@maxhub/max-bot-api": "^0.2.1"
   },
   "commitlint": {
     "extends": [
