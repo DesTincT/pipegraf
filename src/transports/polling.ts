@@ -3,7 +3,7 @@ import { isRecord } from '../utils/index.js';
 
 export type PollingGetUpdates = (params: { offset?: number; signal: AbortSignal }) => Promise<readonly unknown[]>;
 
-export type PollingOptions = {
+export interface PollingOptions {
   getUpdates: PollingGetUpdates;
   intervalMs?: number;
   dedupe?: {
@@ -11,12 +11,12 @@ export type PollingOptions = {
     ttlMs?: number;
     maxSize?: number;
   };
-};
+}
 
-export type PollingController = {
+export interface PollingController {
   stop: () => Promise<void>;
   isRunning: () => boolean;
-};
+}
 
 function defaultGetUpdateId(update: unknown): number | undefined {
   if (!isRecord(update)) return undefined;
@@ -68,7 +68,7 @@ export function createPollingController(bot: UpdateHandler, options: PollingOpti
   let running = true;
 
   let lastUpdateId: number | undefined;
-  const seen: Map<number, number> = new Map();
+  const seen = new Map<number, number>();
   let nextCleanupAt = 0;
 
   const loop = (async () => {

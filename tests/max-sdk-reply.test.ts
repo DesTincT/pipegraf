@@ -16,7 +16,7 @@ function makeMessage(chatId: number, text: string): Message {
 
 describe('Context.reply (MAX SDK binding)', () => {
   it('calls api.sendMessageToChat using chat_id from update', async () => {
-    const calls: Array<{ chatId: number; text: string }> = [];
+    const calls: { chatId: number; text: string }[] = [];
 
     const api: MaxBotApi = {
       sendMessageToChat: async (chatId, text) => {

@@ -50,7 +50,7 @@ describe('polling transport', () => {
 
   it('advances offset based on update_id', async () => {
     const bot = new Maxgraf();
-    const offsets: Array<number | undefined> = [];
+    const offsets: (number | undefined)[] = [];
 
     const updates = [{ update_id: 10, message: { text: 'x' } }, { update_id: 12, message: { text: 'y' } }];
     let sent = false;

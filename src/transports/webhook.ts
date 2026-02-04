@@ -1,8 +1,8 @@
 import type { UpdateHandler } from '../core/types.js';
 
-export type WebhookOptions = {
+export interface WebhookOptions {
   onError?: (err: unknown, update: unknown) => unknown | Promise<unknown>;
-};
+}
 
 export type WebhookCallback = (update: unknown) => Promise<void>;
 

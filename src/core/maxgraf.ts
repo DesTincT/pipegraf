@@ -9,18 +9,18 @@ import type { MaxBotApi } from '../max/sdk.js';
 
 export type ErrorHandler = (err: unknown, ctx: Context) => unknown | Promise<unknown>;
 
-export type MaxgrafOptions = {
+export interface MaxgrafOptions {
   sender?: ReplySender;
   maxApi?: MaxBotApi;
   sdk?: unknown; // test/advanced override used by launch({ polling })
-};
+}
 
-export type LaunchOptions = {
+export interface LaunchOptions {
   polling?: {
     intervalMs?: number;
     dedupeTtlMs?: number;
   };
-};
+}
 
 export class Maxgraf {
   readonly #middlewares: Middleware<Context>[] = [];

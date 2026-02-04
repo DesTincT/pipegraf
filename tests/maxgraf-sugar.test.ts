@@ -22,7 +22,7 @@ describe('Maxgraf sugar API', () => {
   });
 
   it('Maxgraf.reply returns middleware that calls ctx.reply(text, extra)', async () => {
-    const calls: Array<{ text: string; extra: unknown }> = [];
+    const calls: { text: string; extra: unknown }[] = [];
     const extra = { notify: false };
 
     const bot = new Maxgraf({

@@ -3,12 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { Composer } from '../src/core/composer.js';
 import { Maxgraf } from '../src/core/maxgraf.js';
 
-type FakeMessageUpdate = {
+interface FakeMessageUpdate {
   type: 'message_created';
   message: {
     text: string;
   };
-};
+}
 
 function msg(text: string): FakeMessageUpdate {
   return { type: 'message_created', message: { text } };
@@ -17,7 +17,7 @@ function msg(text: string): FakeMessageUpdate {
 describe('local validation (v0.1)', () => {
   it('validates routing, slash-only commands, middleware order, error boundary, and reply (local)', async () => {
     const calls: string[] = [];
-    const replies: Array<{ text: string; extra: unknown }> = [];
+    const replies: { text: string; extra: unknown }[] = [];
     let caught = 0;
 
     const bot = new Maxgraf({

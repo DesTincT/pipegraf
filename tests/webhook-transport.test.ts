@@ -23,7 +23,7 @@ describe('webhook transport', () => {
       throw new Error('boom');
     });
 
-    const handled: Array<{ err: unknown; update: unknown }> = [];
+    const handled: { err: unknown; update: unknown }[] = [];
 
     const webhook = bot.webhookCallback({
       onError: (err, update) => {

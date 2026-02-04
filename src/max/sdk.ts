@@ -1,9 +1,10 @@
 import type { Message, Update } from '@maxhub/max-bot-api/types';
 import { getNumber, isRecord } from '../utils/index.js';
 
-export type MaxBotApi = {
-  sendMessageToChat: (chatId: number, text: string) => Promise<Message>;
-};
+export interface MaxBotApi {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  sendMessageToChat: (chatId: number, text: string, extra?: any) => Promise<Message>;
+}
 
 // Verified from @maxhub/max-bot-api Update types:
 // - many updates include top-level `chat_id: number`
@@ -24,9 +25,9 @@ export function getChatIdFromUpdate(update: unknown): number | undefined {
   return getNumber(chatId);
 }
 
-export type ReplyTarget = {
+export interface ReplyTarget {
   chatId: number;
-};
+}
 
 export function getReplyTargetFromUpdate(update: unknown): ReplyTarget | undefined {
   const chatId = getChatIdFromUpdate(update);
@@ -34,13 +35,14 @@ export function getReplyTargetFromUpdate(update: unknown): ReplyTarget | undefin
   return { chatId };
 }
 
-export type SendReplyParams = {
+export interface SendReplyParams {
   target: ReplyTarget;
   text: string;
-};
+  extra?: unknown;
+}
 
-export async function sendReply(api: MaxBotApi, { target, text }: SendReplyParams): Promise<Message> {
-  return await api.sendMessageToChat(target.chatId, text);
+export async function sendReply(api: MaxBotApi, { target, text, extra }: SendReplyParams): Promise<Message> {
+  return await api.sendMessageToChat(target.chatId, text, extra);
 }
 
 // Compile-time guard: keep aligned with official SDK types.

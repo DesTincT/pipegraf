@@ -3,12 +3,12 @@ import type { ReplySender } from '../../src/core/context.js';
 
 export type MockUpdateType = 'text' | 'message' | 'callback_query' | 'inline_query';
 
-export type MockUpdatePayloadByType = {
+export interface MockUpdatePayloadByType {
   text: { text: string; chat_id?: number; user_id?: number };
   message: { message: Record<string, unknown>; chat_id?: number; user_id?: number };
   callback_query: { data: string; chat_id?: number; user_id?: number };
   inline_query: { query: string; chat_id?: number; user_id?: number };
-};
+}
 
 export function createMockUpdate(type: 'text', payload: MockUpdatePayloadByType['text']): unknown;
 export function createMockUpdate(type: 'message', payload: MockUpdatePayloadByType['message']): unknown;
@@ -50,16 +50,16 @@ export function createMockUpdate(type: MockUpdateType, payload: MockUpdatePayloa
   };
 }
 
-export type CreateTestBotOptions = {
+export interface CreateTestBotOptions {
   senderSpy?: ReplySender;
-};
+}
 
 export function createTestBot(options: CreateTestBotOptions = {}): {
   bot: Maxgraf;
   senderSpy: ReplySender;
-  senderCalls: ReadonlyArray<{ text: string; extra: unknown }>;
+  senderCalls: readonly { text: string; extra: unknown }[];
 } {
-  const senderCalls: Array<{ text: string; extra: unknown }> = [];
+  const senderCalls: { text: string; extra: unknown }[] = [];
 
   const senderSpy: ReplySender =
     options.senderSpy ??

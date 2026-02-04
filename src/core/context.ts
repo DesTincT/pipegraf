@@ -3,10 +3,10 @@ import { getNestedRecord } from '../utils/index.js';
 
 export type ReplySender = (ctx: Context, text: string, extra?: unknown) => Promise<unknown> | unknown;
 
-type SenderOptions = {
+interface SenderOptions {
   sender?: ReplySender;
   maxApi?: MaxBotApi;
-};
+}
 
 export class Context {
   readonly update: unknown;
@@ -73,15 +73,14 @@ export class Context {
     if (this.#sender) {
       return await Promise.resolve(this.#sender(this, text, extra));
     }
-
+  
     if (this.#maxApi) {
       const target = getReplyTargetFromUpdate(this.update);
-      if (!target) {
-        throw new Error('NotImplemented');
-      }
-      return await sendReply(this.#maxApi, { target, text });
+      if (!target) throw new Error('NotImplemented');
+      return await sendReply(this.#maxApi, { target, text, extra });
     }
-
+  
     throw new Error('NotImplemented');
   }
+  
 }

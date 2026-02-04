@@ -2,15 +2,15 @@ import type { Middleware } from '../core/compose.js';
 import type { Context } from '../core/context.js';
 import type { Scene } from './scene.js';
 
-type SceneState = {
+interface SceneState {
   current: string | null;
-};
+}
 
-type SceneApi = {
+interface SceneApi {
   current: string | null;
   enter: (name: string) => Promise<void>;
   leave: () => Promise<void>;
-};
+}
 
 function getOrCreateSceneState(session: Record<string, unknown>): SceneState {
   const existing = session['__scene'];
@@ -49,12 +49,12 @@ function ensureSceneApi(ctx: Context): SceneApi {
   return api;
 }
 
-export type Stage = {
+export interface Stage {
   register: (scene: Scene) => void;
   middleware: () => Middleware<Context>;
   enter: (sceneName: string) => Middleware<Context>;
   leave: () => Middleware<Context>;
-};
+}
 
 export function createStage(): Stage {
   const scenes = new Map<string, Scene>();

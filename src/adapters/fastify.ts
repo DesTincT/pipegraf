@@ -1,11 +1,11 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { UpdateHandler } from '../core/types.js';
 
-export type RegisterFastifyWebhookOptions = {
+export interface RegisterFastifyWebhookOptions {
   path?: string;
   getUpdate?: (request: FastifyRequest) => unknown;
   onRequestError?: (err: unknown, request: FastifyRequest) => unknown | Promise<unknown>;
-};
+}
 
 export function registerFastifyWebhook(
   fastify: FastifyInstance,

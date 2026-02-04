@@ -6,12 +6,12 @@ export type SessionData = Record<string, unknown>;
 
 export type SessionStore<T extends SessionData> = Map<string, T>;
 
-export type SessionOptions<T extends SessionData> = {
+export interface SessionOptions<T extends SessionData> {
   getKey?: (ctx: Context) => string | undefined | null;
   store?: SessionStore<T>;
   createSession?: () => T;
   fallbackKey?: string;
-};
+}
 
 function getChatId(update: unknown): number | undefined {
   if (!isRecord(update)) return undefined;

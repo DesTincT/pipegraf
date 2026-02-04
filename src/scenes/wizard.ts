@@ -3,16 +3,16 @@ import type { Context } from '../core/context.js';
 import { getNumber, isRecord } from '../utils/index.js';
 import { createScene, type Scene } from './scene.js';
 
-type WizardState = {
+interface WizardState {
   step: number;
-};
+}
 
-type WizardApi = {
+interface WizardApi {
   step: number;
   next: () => Promise<void>;
   back: () => Promise<void>;
   selectStep: (n: number) => Promise<void>;
-};
+}
 
 function clampStep(step: number, max: number): number {
   if (Number.isNaN(step)) return 0;

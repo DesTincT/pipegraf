@@ -4,15 +4,15 @@ import type { UpdateHandler } from '../core/types.js';
 import { getNestedRecord, getNumber, isRecord } from '../utils/index.js';
 import { createPollingController, type PollingController } from './polling.js';
 
-type MaxSdkLike = {
+interface MaxSdkLike {
   api: unknown;
-};
+}
 
 type MaxApiGetUpdates = (a?: unknown, b?: unknown) => Promise<unknown>;
 
-type MaxApiLike = {
+interface MaxApiLike {
   getUpdates: MaxApiGetUpdates;
-};
+}
 
 function hasGetUpdates(api: unknown): api is MaxApiLike {
   return isRecord(api) && typeof api['getUpdates'] === 'function';
@@ -76,19 +76,19 @@ function normalizeMaxUpdate(raw: unknown): unknown {
   return normalized;
 }
 
-export type MaxPollingLaunchOptions = {
+export interface MaxPollingLaunchOptions {
   token: string;
   intervalMs?: number;
   dedupeTtlMs?: number;
   dedupeMaxSize?: number;
   sdk?: unknown; // test/advanced override
-};
+}
 
-export type MaxPollingController = {
+export interface MaxPollingController {
   controller: PollingController;
   sdk: unknown;
   api: unknown;
-};
+}
 
 export function createMaxPollingController(bot: UpdateHandler, options: MaxPollingLaunchOptions): MaxPollingController {
   const sdk: unknown = options.sdk ?? new MaxBotSdk(options.token);

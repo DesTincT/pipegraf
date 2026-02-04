@@ -19,7 +19,7 @@ describe('scenes/stage (v0.2)', () => {
     const stage = createStage();
     stage.register(createScene('wizard'));
 
-    const seen: Array<string | null> = [];
+    const seen: (string | null)[] = [];
     const bot = new Maxgraf({ sender: async () => undefined });
     bot.use(session());
     bot.use(stage.middleware());
@@ -74,7 +74,7 @@ describe('scenes/stage (v0.2)', () => {
       }),
     );
 
-    const currents: Array<string | null> = [];
+    const currents: (string | null)[] = [];
 
     const bot = new Maxgraf({ sender: async () => undefined });
     bot.use(session());

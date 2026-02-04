@@ -6,7 +6,7 @@ const tsFiles = ['**/*.ts', '**/*.tsx'];
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'eslint.config.js'],
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'eslint.config.js', 'examples/**'],
   },
   js.configs.recommended,
   prettier,
