@@ -69,4 +69,3 @@ describe('wizard (v0.2)', () => {
     expect(steps).toEqual([0, 0]);
   });
 });
-

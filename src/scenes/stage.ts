@@ -63,28 +63,21 @@ export function createStage(): Stage {
     register: (scene) => {
       scenes.set(scene.name, scene);
     },
-    enter:
-      (sceneName) =>
-      async (ctx, next) => {
-        await ensureSceneApi(ctx).enter(sceneName);
-        return await next();
-      },
-    leave:
-      () =>
-      async (ctx, next) => {
-        await ensureSceneApi(ctx).leave();
-        return await next();
-      },
-    middleware:
-      () =>
-      async (ctx, next) => {
-        const api = ensureSceneApi(ctx);
-        const scene = api.current ? scenes.get(api.current) : undefined;
-        if (scene) {
-          return await scene.middleware(ctx, next);
-        }
-        return await next();
-      },
+    enter: (sceneName) => async (ctx, next) => {
+      await ensureSceneApi(ctx).enter(sceneName);
+      return await next();
+    },
+    leave: () => async (ctx, next) => {
+      await ensureSceneApi(ctx).leave();
+      return await next();
+    },
+    middleware: () => async (ctx, next) => {
+      const api = ensureSceneApi(ctx);
+      const scene = api.current ? scenes.get(api.current) : undefined;
+      if (scene) {
+        return await scene.middleware(ctx, next);
+      }
+      return await next();
+    },
   };
 }
-

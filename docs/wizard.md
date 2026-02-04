@@ -31,3 +31,4 @@ bot.use(stage.middleware());
 bot.start(stage.enter('onboarding'));
 ```
 
+Note: `stage.enter(name)` is middleware. If you enter the wizard from `/start`, the wizard scene becomes active for routing on the **next** update.

@@ -52,7 +52,10 @@ describe('polling transport', () => {
     const bot = new Maxgraf();
     const offsets: (number | undefined)[] = [];
 
-    const updates = [{ update_id: 10, message: { text: 'x' } }, { update_id: 12, message: { text: 'y' } }];
+    const updates = [
+      { update_id: 10, message: { text: 'x' } },
+      { update_id: 12, message: { text: 'y' } },
+    ];
     let sent = false;
 
     let resolveSecondCall: (() => void) | undefined;
@@ -98,7 +101,10 @@ describe('polling transport', () => {
       dedupe: { ttlMs: 60_000 },
       getUpdates: async ({ signal }) => {
         if (signal.aborted) return [];
-        return [{ update_id: 1, message: { text: 'x' } }, { update_id: 1, message: { text: 'x' } }];
+        return [
+          { update_id: 1, message: { text: 'x' } },
+          { update_id: 1, message: { text: 'x' } },
+        ];
       },
     });
 
@@ -143,5 +149,35 @@ describe('polling transport', () => {
 
     expect(calls).toEqual(['x', 'x']);
   });
-});
 
+  it('dedupes using dedupe.getKey when update_id is missing', async () => {
+    const calls: string[] = [];
+    const bot = new Maxgraf();
+
+    bot.use(
+      Composer.on('text', async (ctx) => {
+        calls.push(String(ctx.messageText));
+      }),
+    );
+
+    const controller = bot.startPolling({
+      intervalMs: 0,
+      dedupe: {
+        ttlMs: 60_000,
+        getKey: (u) => (u && typeof u === 'object' && 'k' in u ? String((u as { k: unknown }).k) : undefined),
+      },
+      getUpdates: async ({ signal }) => {
+        if (signal.aborted) return [];
+        return [
+          { k: 'same', message: { text: 'x' } },
+          { k: 'same', message: { text: 'x' } },
+        ];
+      },
+    });
+
+    await new Promise((r) => setTimeout(r, 0));
+    await controller.stop();
+
+    expect(calls).toEqual(['x']);
+  });
+});

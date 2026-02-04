@@ -6,7 +6,7 @@ export type MockUpdateType = 'text' | 'message' | 'callback_query' | 'inline_que
 export interface MockUpdatePayloadByType {
   text: { text: string; chat_id?: number; user_id?: number };
   message: { message: Record<string, unknown>; chat_id?: number; user_id?: number };
-  callback_query: { data: string; chat_id?: number; user_id?: number };
+  callback_query: { payload: string; chat_id?: number; user_id?: number };
   inline_query: { query: string; chat_id?: number; user_id?: number };
 }
 
@@ -36,7 +36,7 @@ export function createMockUpdate(type: MockUpdateType, payload: MockUpdatePayloa
   if (type === 'callback_query') {
     const p = payload as MockUpdatePayloadByType['callback_query'];
     return {
-      callback_query: { data: p.data },
+      callback_query: { payload: p.payload },
       ...(p.chat_id === undefined ? {} : { chat_id: p.chat_id }),
       ...(p.user_id === undefined ? {} : { user_id: p.user_id }),
     };
@@ -72,7 +72,9 @@ export function createTestBot(options: CreateTestBotOptions = {}): {
   return { bot, senderSpy, senderCalls };
 }
 
-export async function feedUpdate(bot: { handleUpdate: (update: unknown) => Promise<unknown> }, update: unknown): Promise<unknown> {
+export async function feedUpdate(
+  bot: { handleUpdate: (update: unknown) => Promise<unknown> },
+  update: unknown,
+): Promise<unknown> {
   return await bot.handleUpdate(update);
 }
-

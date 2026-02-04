@@ -54,8 +54,8 @@ describe('Composer routing', () => {
     await fn(ctx);
   });
 
-  it('action matches callback query data and sets ctx.match', async () => {
-    const ctx = new Context({ callback_query: { data: 'ok:1' } });
+  it('action matches callback query payload and sets ctx.match', async () => {
+    const ctx = new Context({ callback_query: { payload: 'ok:1' } });
     const calls: string[] = [];
 
     const fn = compose<Context>([

@@ -28,4 +28,3 @@ console.log(`listening on http://127.0.0.1:${port}/webhook`);
 console.log(
   `try: curl -X POST http://127.0.0.1:${port}/webhook -H \"content-type: application/json\" -d \"{\\\"update_type\\\":\\\"bot_started\\\",\\\"timestamp\\\":0,\\\"chat_id\\\":123}\"`,
 );
-

@@ -15,7 +15,7 @@ const bot = new Maxgraf();
 bot.use(session<Session>());
 
 bot.start((ctx) => {
-  const s = ctx.session;
+  const s = ctx.session as unknown as Session;
   s.count = (s.count ?? 0) + 1;
   return ctx.reply(`count=${s.count}`);
 });
@@ -24,6 +24,7 @@ bot.start((ctx) => {
 ## Default key derivation
 
 By default, the session key is derived from the update when possible:
+
 - `chat_id:user_id` when both are present
 - `chat_id` when only chat is present
 - `user_id` when only user is present

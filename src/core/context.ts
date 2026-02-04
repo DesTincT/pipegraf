@@ -1,5 +1,5 @@
 import { getReplyTargetFromUpdate, sendReply, type MaxBotApi } from '../max/sdk.js';
-import { getNestedRecord } from '../utils/index.js';
+import { getNestedRecord, isRecord } from '../utils/index.js';
 
 export type ReplySender = (ctx: Context, text: string, extra?: unknown) => Promise<unknown> | unknown;
 
@@ -57,6 +57,15 @@ export class Context {
   get callbackData(): string | undefined {
     const cq = this.callbackQuery;
     if (!cq) return undefined;
+
+    const payload = cq['payload'];
+    if (typeof payload === 'string') return payload;
+    if (isRecord(payload)) {
+      const action = payload['action'];
+      if (typeof action === 'string') return action;
+    }
+
+    // Backward compatibility for older internal shapes/tests.
     const data = cq['data'];
     return typeof data === 'string' ? data : undefined;
   }
@@ -73,14 +82,13 @@ export class Context {
     if (this.#sender) {
       return await Promise.resolve(this.#sender(this, text, extra));
     }
-  
+
     if (this.#maxApi) {
       const target = getReplyTargetFromUpdate(this.update);
       if (!target) throw new Error('NotImplemented');
       return await sendReply(this.#maxApi, { target, text, extra });
     }
-  
+
     throw new Error('NotImplemented');
   }
-  
 }

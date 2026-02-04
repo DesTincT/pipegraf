@@ -22,7 +22,7 @@ Maxgraf.js exists to provide a small, deterministic framework layer focused on D
 - **Slash-only command parsing**: commands match `/name` (not `name`)
 - **`ctx.reply()` via official MAX SDK**: handled internally when launching with a token
 - **Polling + webhook**: `bot.launch({ polling })` and `bot.webhookCallback()`
-- **TTL-based update deduplication**: in-memory `update_id` TTL store (polling)
+- **TTL-based update deduplication**: in-memory TTL store keyed by stable update identifiers (polling)
 - **Deterministic behavior**: stable middleware order, no hidden concurrency
 - **Error boundary**: `bot.catch((err, ctx) => ...)`
 
@@ -58,30 +58,67 @@ process.once('SIGINT', () => void bot.stop());
 process.once('SIGTERM', () => void bot.stop());
 ```
 
+## Keyboards (inline buttons)
+
+Maxgraf does not introduce a custom keyboard format.
+
+Instead, it re-exports the official MAX Keyboard API, so you can build inline keyboards exactly as described in the MAX Bot API documentation, without importing the SDK directly.
+
+```ts
+import { Maxgraf, Keyboard } from 'maxgraf';
+
+const bot = new Maxgraf(process.env.MAX_BOT_TOKEN);
+
+const mainMenu = () =>
+  Keyboard.inlineKeyboard([
+    [Keyboard.button.callback('ℹ️ Help', 'menu:help')],
+    [Keyboard.button.callback('🧙 Wizard', 'menu:wizard')],
+    [Keyboard.button.callback('👍 Like', 'like'), Keyboard.button.callback('👎 Dislike', 'dislike')],
+    [Keyboard.button.link('🌐 Open max.ru', 'https://max.ru')],
+  ]);
+
+bot.start((ctx) =>
+  ctx.reply('Welcome! Use buttons below:', {
+    attachments: [mainMenu()],
+  }),
+);
+
+bot.action('menu:help', (ctx) =>
+  ctx.reply('This is the help screen.', {
+    attachments: [mainMenu()],
+  }),
+);
+
+bot.action('like', (ctx) => ctx.reply('❤️ Thanks!'));
+bot.action('dislike', (ctx) => ctx.reply('😢 Sad but noted'));
+
+await bot.launch({ polling: { intervalMs: 250, dedupeTtlMs: 60_000 } });
+```
+
 ## Feature comparison
 
-| Capability | Telegraf.js | Maxgraf.js (current) | Maxgraf.js (planned) |
-| --- | --- | --- | --- |
-| Telegraf-like DX | ✅ | ✅ | ✅ |
-| Middleware pipeline | ✅ | ✅ | ✅ |
-| Sugar API (start/help/hears/command) | ✅ | ✅ | ✅ |
-| Slash command handling | ✅ | ✅ | ✅ |
-| `ctx.reply` | ✅ | ✅ | ✅ |
-| `ctx.command` / `ctx.args` | ✅ | ⚠️ | ✅ |
-| Session support | ✅ | ✅ | ✅ |
-| Scenes / dialogs | ✅ | ✅ | ✅ |
-| Wizard flows | ✅ | ✅ | ✅ |
-| Testing helpers | ✅ | ⚠️ | ✅ |
-| Update deduplication (TTL) | ⚠️ | ✅ | ✅ |
-| Deterministic behavior | ⚠️ | ✅ | ✅ |
-| Platform coupling | Telegram | MAX | MAX |
+| Capability                           | Telegraf.js | Maxgraf.js (current) | Maxgraf.js (planned) |
+| ------------------------------------ | ----------- | -------------------- | -------------------- |
+| Telegraf-like DX                     | ✅          | ✅                   | ✅                   |
+| Middleware pipeline                  | ✅          | ✅                   | ✅                   |
+| Sugar API (start/help/hears/command) | ✅          | ✅                   | ✅                   |
+| Slash command handling               | ✅          | ✅                   | ✅                   |
+| `ctx.reply`                          | ✅          | ✅                   | ✅                   |
+| `ctx.command` / `ctx.args`           | ✅          | ⚠️                   | ✅                   |
+| Session support                      | ✅          | ✅                   | ✅                   |
+| Scenes / dialogs                     | ✅          | ✅                   | ✅                   |
+| Wizard flows                         | ✅          | ✅                   | ✅                   |
+| Testing helpers                      | ✅          | ⚠️                   | ✅                   |
+| Update deduplication (TTL)           | ⚠️          | ✅                   | ✅                   |
+| Deterministic behavior               | ⚠️          | ✅                   | ✅                   |
+| Platform coupling                    | Telegram    | MAX                  | MAX                  |
 
 Legend: ✅ supported, ⚠️ partial / minimal, ❌ not supported.
 
 ## Runtime guarantees
 
 - **Stable middleware order**: middleware runs in registration order; wrapping behavior is deterministic.
-- **TTL-based deduplication (polling)**: repeated `update_id` values are ignored within TTL (in-memory).
+- **TTL-based deduplication (polling)**: repeated updates are ignored within TTL (in-memory).
 - **Isolated error handling**: errors bubble by default; `bot.catch` provides a single explicit boundary.
 - **No hidden concurrency**: no background task orchestration beyond what you explicitly start.
 

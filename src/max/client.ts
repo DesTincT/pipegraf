@@ -10,4 +10,3 @@ export function createMaxBotApi({ token }: CreateMaxBotApiOptions): MaxBotApi {
   const bot = new Bot(token);
   return bot.api;
 }
-

@@ -13,7 +13,9 @@ function msg(text: string, chatId?: number, userId?: number): unknown {
 
 describe('session middleware', () => {
   it('same chat+user key persists across updates', async () => {
-    interface S { count?: number }
+    interface S {
+      count?: number;
+    }
 
     const bot = new Maxgraf({ sender: async () => undefined });
     bot.use(session<S>());
@@ -104,4 +106,3 @@ describe('session middleware', () => {
     expect(probe.value).toEqual(expect.objectContaining({ n: 3 }));
   });
 });
-

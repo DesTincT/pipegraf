@@ -7,7 +7,7 @@ Scene state is stored in `ctx.session`, so `session()` middleware is required.
 ## Usage
 
 ```ts
-import { Composer, Maxgraf, createScene, createStage, session } from 'maxgraf';
+import { Maxgraf, createScene, createStage, session } from 'maxgraf';
 
 const stage = createStage();
 
@@ -22,16 +22,17 @@ bot.use(session());
 bot.use(stage.middleware());
 
 bot.start(stage.enter('wizard'));
-bot.use(Composer.command('leave', stage.leave()));
+bot.command('leave', stage.leave());
 ```
 
 ## Routing order
 
 When `ctx.scene.current` is set, `stage.middleware()` runs the current scene middleware **before** downstream middleware (global handlers).
 
+Note: `stage.enter(name)` is middleware. If you enter a scene from `/start`, the scene becomes active for routing on the **next** update.
+
 This means you should install it early:
 
 - `bot.use(session())`
 - `bot.use(stage.middleware())`
 - then your other `bot.use(...)` / `Composer.*(...)` handlers
-

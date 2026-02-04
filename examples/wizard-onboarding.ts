@@ -36,4 +36,3 @@ bot.start(stage.enter('onboarding'));
 await bot.handleUpdate(msg('/start'));
 await bot.handleUpdate(msg('Ada'));
 await bot.handleUpdate(msg('anything'));
-

@@ -38,4 +38,3 @@ describe('webhook transport', () => {
     expect(handled[0]?.update).toEqual({ update_id: 1 });
   });
 });
-

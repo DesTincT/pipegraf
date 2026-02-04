@@ -4,9 +4,9 @@ import { getNumber, isRecord } from '../utils/index.js';
 
 export type SessionData = Record<string, unknown>;
 
-export type SessionStore<T extends SessionData> = Map<string, T>;
+export type SessionStore<T extends object> = Map<string, T>;
 
-export interface SessionOptions<T extends SessionData> {
+export interface SessionOptions<T extends object> {
   getKey?: (ctx: Context) => string | undefined | null;
   store?: SessionStore<T>;
   createSession?: () => T;
@@ -51,7 +51,10 @@ function getUserId(update: unknown): number | undefined {
   return senderId;
 }
 
-export function getSessionKey(ctx: Context, options: Pick<SessionOptions<SessionData>, 'getKey' | 'fallbackKey'> = {}): string {
+export function getSessionKey(
+  ctx: Context,
+  options: Pick<SessionOptions<SessionData>, 'getKey' | 'fallbackKey'> = {},
+): string {
   const custom = options.getKey?.(ctx);
   if (custom) return custom;
 
@@ -65,7 +68,7 @@ export function getSessionKey(ctx: Context, options: Pick<SessionOptions<Session
   return fallbackKey;
 }
 
-export function session<T extends SessionData = SessionData>(options: SessionOptions<T> = {}): Middleware<Context> {
+export function session<T extends object = SessionData>(options: SessionOptions<T> = {}): Middleware<Context> {
   const store: SessionStore<T> = options.store ?? new Map<string, T>();
   const createSession = options.createSession ?? (() => ({}) as T);
 
@@ -76,8 +79,7 @@ export function session<T extends SessionData = SessionData>(options: SessionOpt
       entry = createSession();
       store.set(key, entry);
     }
-    ctx.session = entry as unknown as SessionData;
+    ctx.session = entry as unknown as Record<string, unknown>;
     return await next();
   };
 }
-

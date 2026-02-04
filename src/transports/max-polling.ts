@@ -25,6 +25,21 @@ function normalizeMaxUpdate(raw: unknown): unknown {
   const updateType = typeof raw['update_type'] === 'string' ? raw['update_type'] : undefined;
   const timestamp = getNumber(raw['timestamp']);
 
+  const callbackId =
+    (() => {
+      const cb = getNestedRecord(raw, 'callback');
+      const id = cb ? cb['callback_id'] : undefined;
+      return typeof id === 'string' ? id : undefined;
+    })() ?? undefined;
+
+  const messageId =
+    (() => {
+      const msg = getNestedRecord(raw, 'message');
+      const body = msg ? getNestedRecord(msg, 'body') : undefined;
+      const mid = body ? body['mid'] : undefined;
+      return typeof mid === 'string' ? mid : undefined;
+    })() ?? undefined;
+
   const chatId =
     getNumber(raw['chat_id']) ??
     (() => {
@@ -52,6 +67,9 @@ function normalizeMaxUpdate(raw: unknown): unknown {
       const directData = direct ? direct['data'] : undefined;
       if (typeof directData === 'string') return directData;
 
+      const directPayload = direct ? direct['payload'] : undefined;
+      if (typeof directPayload === 'string') return directPayload;
+
       const cb = getNestedRecord(raw, 'callback');
       const payload = cb ? cb['payload'] : undefined;
       return typeof payload === 'string' ? payload : undefined;
@@ -62,6 +80,8 @@ function normalizeMaxUpdate(raw: unknown): unknown {
     ...(updateType === undefined ? {} : { update_type: updateType }),
     ...(timestamp === undefined ? {} : { timestamp }),
     ...(chatId === undefined ? {} : { chat_id: chatId }),
+    ...(callbackId === undefined ? {} : { callback_id: callbackId }),
+    ...(messageId === undefined ? {} : { message_id: messageId }),
     ...(messageText === undefined
       ? {}
       : {
@@ -70,7 +90,7 @@ function normalizeMaxUpdate(raw: unknown): unknown {
             recipient: { chat_id: chatId },
           },
         }),
-    ...(callbackData === undefined ? {} : { callback_query: { data: callbackData } }),
+    ...(callbackData === undefined ? {} : { callback_query: { payload: callbackData } }),
   };
 
   return normalized;
@@ -96,7 +116,7 @@ export function createMaxPollingController(bot: UpdateHandler, options: MaxPolli
     throw new Error('NotImplemented');
   }
 
-  const api = (sdk as MaxSdkLike).api;
+  const api = (sdk as unknown as MaxSdkLike).api;
   if (!hasGetUpdates(api)) {
     throw new Error('NotImplemented');
   }
@@ -108,6 +128,20 @@ export function createMaxPollingController(bot: UpdateHandler, options: MaxPolli
     dedupe: {
       ttlMs: options.dedupeTtlMs,
       maxSize: options.dedupeMaxSize,
+      getKey: (update) => {
+        if (!isRecord(update)) return undefined;
+        const messageId2 = update['message_id'];
+        if (typeof messageId2 === 'string' && messageId2) return messageId2;
+        const callbackId2 = update['callback_id'];
+        if (typeof callbackId2 === 'string' && callbackId2) return callbackId2;
+        const type = update['update_type'];
+        const ts = update['timestamp'];
+        const chat = update['chat_id'];
+        if (typeof type === 'string' && typeof ts === 'number' && typeof chat === 'number') {
+          return `${type}:${ts}:${chat}`;
+        }
+        return undefined;
+      },
     },
     getUpdates: async ({ signal }) => {
       if (signal.aborted) return [];
@@ -124,4 +158,3 @@ export function createMaxPollingController(bot: UpdateHandler, options: MaxPolli
 
   return { controller, sdk, api };
 }
-

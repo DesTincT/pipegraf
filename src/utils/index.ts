@@ -11,4 +11,3 @@ export function getNestedRecord(value: unknown, key: string): Record<string, unk
 export function getNumber(value: unknown): number | undefined {
   return typeof value === 'number' ? value : undefined;
 }
-

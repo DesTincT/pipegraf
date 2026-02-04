@@ -3,10 +3,7 @@ import type { Context } from './context.js';
 
 export type Filter = 'message' | 'callback_query' | 'inline_query' | 'text' | ((ctx: Context) => boolean);
 
-export type Trigger =
-  | string
-  | RegExp
-  | ((value: string, ctx: Context) => RegExpMatchArray | null | undefined);
+export type Trigger = string | RegExp | ((value: string, ctx: Context) => RegExpMatchArray | null | undefined);
 
 function asReadonlyArray<T>(value: T | readonly T[]): readonly T[] {
   return Array.isArray(value) ? (value as readonly T[]) : [value as T];
@@ -62,7 +59,10 @@ export function on(filters: Filter | readonly Filter[], ...mws: readonly Middlew
   };
 }
 
-export function hears(triggers: Trigger | readonly Trigger[], ...mws: readonly Middleware<Context>[]): Middleware<Context> {
+export function hears(
+  triggers: Trigger | readonly Trigger[],
+  ...mws: readonly Middleware<Context>[]
+): Middleware<Context> {
   const triggerList = asReadonlyArray(triggers);
   const handler = compose(mws);
 
@@ -82,7 +82,10 @@ export function hears(triggers: Trigger | readonly Trigger[], ...mws: readonly M
   });
 }
 
-export function action(triggers: Trigger | readonly Trigger[], ...mws: readonly Middleware<Context>[]): Middleware<Context> {
+export function action(
+  triggers: Trigger | readonly Trigger[],
+  ...mws: readonly Middleware<Context>[]
+): Middleware<Context> {
   const triggerList = asReadonlyArray(triggers);
   const handler = compose(mws);
 
@@ -102,7 +105,10 @@ export function action(triggers: Trigger | readonly Trigger[], ...mws: readonly 
   });
 }
 
-export function command(commands: string | readonly string[], ...mws: readonly Middleware<Context>[]): Middleware<Context> {
+export function command(
+  commands: string | readonly string[],
+  ...mws: readonly Middleware<Context>[]
+): Middleware<Context> {
   const commandList = asReadonlyArray(commands).map((c) => (c.startsWith('/') ? c.slice(1) : c));
   const handler = compose(mws);
 

@@ -2,8 +2,13 @@ import type { Message, Update } from '@maxhub/max-bot-api/types';
 import { getNumber, isRecord } from '../utils/index.js';
 
 export interface MaxBotApi {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  sendMessageToChat: (chatId: number, text: string, extra?: any) => Promise<Message>;
+  sendMessageToChat: (chatId: number, text: string, extra?: Record<string, unknown>) => Promise<Message>;
+}
+
+function asExtra(value: unknown): Record<string, unknown> | undefined {
+  if (!isRecord(value)) return undefined;
+  if (Array.isArray(value)) return undefined;
+  return value;
 }
 
 // Verified from @maxhub/max-bot-api Update types:
@@ -42,9 +47,8 @@ export interface SendReplyParams {
 }
 
 export async function sendReply(api: MaxBotApi, { target, text, extra }: SendReplyParams): Promise<Message> {
-  return await api.sendMessageToChat(target.chatId, text, extra);
+  return await api.sendMessageToChat(target.chatId, text, asExtra(extra));
 }
 
 // Compile-time guard: keep aligned with official SDK types.
 export type _MaxSdkUpdate = Update;
-

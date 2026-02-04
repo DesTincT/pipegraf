@@ -119,4 +119,3 @@ describe('local validation (v0.1)', () => {
     expect(caught).toBe(0);
   });
 });
-

@@ -56,4 +56,3 @@ describe('Maxgraf sugar API', () => {
     expect(calls).toEqual(['hears', 'command']);
   });
 });
-

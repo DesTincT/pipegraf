@@ -51,4 +51,3 @@ await bot.handleUpdate(msg('/start'));
 await bot.handleUpdate(msg('nope'));
 await bot.handleUpdate(msg('ok'));
 await bot.handleUpdate(msg('after'));
-

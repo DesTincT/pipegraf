@@ -13,4 +13,3 @@ export function createScene(name: string, ...mws: readonly Middleware<Context>[]
     middleware: async (ctx, next) => await handler(ctx, next),
   };
 }
-

@@ -58,10 +58,12 @@ describe('Maxgraf.handleUpdate', () => {
       sender: async (_ctx, text) => `sent:${text}`,
     });
 
-    bot.use(Composer.on('text', async (ctx) => {
-      const result = await ctx.reply('hi');
-      expect(result).toBe('sent:hi');
-    }));
+    bot.use(
+      Composer.on('text', async (ctx) => {
+        const result = await ctx.reply('hi');
+        expect(result).toBe('sent:hi');
+      }),
+    );
 
     await bot.handleUpdate({ message: { text: 'hello' } });
 

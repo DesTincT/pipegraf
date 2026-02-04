@@ -1,6 +1,7 @@
 {
   "name": "maxgraf",
-  "version": "0.3.1",
+  "version": "0.9.0",
+  "description": "Node.js/TypeScript framework for building MAX messenger bots.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -15,7 +16,8 @@
   ],
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -30,8 +32,10 @@
   "publishConfig": {
     "access": "public"
   },
+  "sideEffects": false,
   "scripts": {
     "build": "tsup",
+    "prepack": "pnpm build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "prepare": "husky",

@@ -61,4 +61,3 @@ describe('Maxgraf.launch / stop', () => {
     expect(getUpdatesCalls).toBeGreaterThan(0);
   });
 });
-

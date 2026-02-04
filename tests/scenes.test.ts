@@ -102,4 +102,3 @@ describe('scenes/stage (v0.2)', () => {
     await expect(bot.handleUpdate(msg('hi'))).rejects.toThrow('Session middleware is required for scenes');
   });
 });
-

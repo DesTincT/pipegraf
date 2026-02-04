@@ -83,4 +83,3 @@ export function createWizard(name: string, steps: readonly Middleware<Context>[]
     return await handler(ctx, next);
   });
 }
-

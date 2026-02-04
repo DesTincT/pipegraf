@@ -32,4 +32,3 @@ describe('testing helpers', () => {
     expect(calls).toEqual(['ok']);
   });
 });
-

@@ -16,19 +16,43 @@ function makeMessage(chatId: number, text: string): Message {
 
 describe('Context.reply (MAX SDK binding)', () => {
   it('calls api.sendMessageToChat using chat_id from update', async () => {
-    const calls: { chatId: number; text: string }[] = [];
+    const calls: { chatId: number; text: string; extra: unknown }[] = [];
 
     const api: MaxBotApi = {
-      sendMessageToChat: async (chatId, text) => {
-        calls.push({ chatId, text });
+      sendMessageToChat: async (chatId, text, extra) => {
+        calls.push({ chatId, text, extra });
         return makeMessage(chatId, text);
       },
     };
 
     const ctx = new Context({ update_type: 'bot_started', timestamp: 0, chat_id: 123 }, { maxApi: api });
-    await ctx.reply('hi');
+    await ctx.reply('hi', {
+      attachments: [
+        {
+          type: 'inline_keyboard',
+          payload: {
+            buttons: [[{ type: 'link', text: 't', url: 'https://example.com' }]],
+          },
+        },
+      ],
+    });
 
-    expect(calls).toEqual([{ chatId: 123, text: 'hi' }]);
+    expect(calls).toEqual([
+      {
+        chatId: 123,
+        text: 'hi',
+        extra: {
+          attachments: [
+            {
+              type: 'inline_keyboard',
+              payload: {
+                buttons: [[{ type: 'link', text: 't', url: 'https://example.com' }]],
+              },
+            },
+          ],
+        },
+      },
+    ]);
   });
 
   it('throws NotImplemented when chat_id cannot be inferred', async () => {
@@ -40,4 +64,3 @@ describe('Context.reply (MAX SDK binding)', () => {
     await expect(ctx.reply('hi')).rejects.toThrow('NotImplemented');
   });
 });
-

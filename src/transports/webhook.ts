@@ -19,4 +19,3 @@ export function createWebhookCallback(bot: UpdateHandler, options: WebhookOption
     }
   };
 }
-

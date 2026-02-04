@@ -43,4 +43,3 @@ setTimeout(() => {
     console.log('stopped');
   });
 }, 1000);
-
