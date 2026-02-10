@@ -1,14 +1,15 @@
-import { Maxgraf } from '../dist/index.js';
+import { Bot, createMockAdapter } from '../dist/index.js';
 
-const token = process.env.MAX_BOT_TOKEN;
-if (!token) throw new Error('MAX_BOT_TOKEN is required');
-
-const bot = new Maxgraf(token);
+const bot = new Bot({
+  adapter: createMockAdapter(),
+  adapterConfig: {},
+});
 
 bot.use(async (ctx, next) => {
   const updateType =
-    (ctx.update && typeof ctx.update === 'object' && 'update_type' in ctx.update && ctx.update.update_type) ||
-    'unknown';
+    ctx.update && typeof ctx.update === 'object' && 'update_type' in ctx.update
+      ? ctx.update.update_type
+      : 'unknown';
   const text = ctx.messageText;
   const callback = ctx.callbackData;
   console.log(
@@ -29,7 +30,7 @@ bot.help(async (ctx) => {
 });
 
 bot.hears('hi', async (ctx) => await ctx.reply('Hey there'));
-bot.command('hipster', Maxgraf.reply('λ'));
+bot.command('hipster', Bot.reply('λ'));
 
 bot.catch(async (err, ctx) => {
   console.error('[error]', err);

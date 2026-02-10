@@ -1,17 +1,17 @@
 import { Bot as MaxBotSdk } from '@maxhub/max-bot-api';
 
-import type { UpdateHandler } from '../core/types.js';
-import { getNestedRecord, getNumber, isRecord } from '../utils/index.js';
-import { createPollingController, type PollingController } from './polling.js';
+import type { UpdateHandler } from '../../core/types.js';
+import type { PollingConfig } from '../types.js';
+import { getNestedRecord, getNumber, isRecord } from '../../utils/index.js';
+import { createPollingController, type PollingController } from '../../transports/polling.js';
+import { createMaxReplyApi } from './reply-api.js';
 
 interface MaxSdkLike {
   api: unknown;
 }
 
-type MaxApiGetUpdates = (a?: unknown, b?: unknown) => Promise<unknown>;
-
 interface MaxApiLike {
-  getUpdates: MaxApiGetUpdates;
+  getUpdates: (a?: unknown, b?: unknown) => Promise<unknown>;
 }
 
 function hasGetUpdates(api: unknown): api is MaxApiLike {
@@ -96,21 +96,15 @@ function normalizeMaxUpdate(raw: unknown): unknown {
   return normalized;
 }
 
-export interface MaxPollingLaunchOptions {
+export interface MaxPollingConfig extends PollingConfig {
   token: string;
-  intervalMs?: number;
-  dedupeTtlMs?: number;
-  dedupeMaxSize?: number;
-  sdk?: unknown; // test/advanced override
+  sdk?: unknown;
 }
 
-export interface MaxPollingController {
-  controller: PollingController;
-  sdk: unknown;
-  api: unknown;
-}
-
-export function createMaxPollingController(bot: UpdateHandler, options: MaxPollingLaunchOptions): MaxPollingController {
+export function createMaxPollingController(
+  bot: UpdateHandler,
+  options: MaxPollingConfig,
+): { controller: PollingController; api: ReturnType<typeof createMaxReplyApi> } {
   const sdk: unknown = options.sdk ?? new MaxBotSdk(options.token);
   if (!isRecord(sdk) || !('api' in sdk)) {
     throw new Error('NotImplemented');
@@ -127,7 +121,7 @@ export function createMaxPollingController(bot: UpdateHandler, options: MaxPolli
     intervalMs: options.intervalMs,
     dedupe: {
       ttlMs: options.dedupeTtlMs,
-      maxSize: options.dedupeMaxSize,
+      maxSize: options.dedupeMaxSize as number | undefined,
       getKey: (update) => {
         if (!isRecord(update)) return undefined;
         const messageId2 = update['message_id'];
@@ -156,5 +150,6 @@ export function createMaxPollingController(bot: UpdateHandler, options: MaxPolli
     },
   });
 
-  return { controller, sdk, api };
+  const replyApi = createMaxReplyApi(api as unknown as { sendMessageToChat: (chatId: number, text: string, extra?: Record<string, unknown>) => Promise<unknown> });
+  return { controller, api: replyApi };
 }

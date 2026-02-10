@@ -1,4 +1,4 @@
-import { Maxgraf, createStage, createWizard, session } from '../dist/index.js';
+import { Bot, createStage, createWizard, session } from '../dist/index.js';
 
 function msg(text: string): unknown {
   return { message: { text }, chat_id: 1, user_id: 1 };
@@ -24,7 +24,7 @@ stage.register(
   ]),
 );
 
-const bot = new Maxgraf({
+const bot = new Bot({
   sender: async (_ctx, text) => console.log(`reply: ${text}`),
 });
 

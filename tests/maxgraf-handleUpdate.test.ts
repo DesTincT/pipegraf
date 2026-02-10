@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { Maxgraf } from '../src/core/maxgraf.js';
+import { Bot } from '../src/core/bot.js';
 import { Composer } from '../src/core/composer.js';
 
-describe('Maxgraf.handleUpdate', () => {
+describe('Bot.handleUpdate', () => {
   it('runs middleware in deterministic order', async () => {
     const calls: string[] = [];
-    const bot = new Maxgraf();
+    const bot = new Bot();
 
     bot.use(async (_ctx, next) => {
       calls.push('a:before');
@@ -26,7 +26,7 @@ describe('Maxgraf.handleUpdate', () => {
   });
 
   it('bubbles errors by default', async () => {
-    const bot = new Maxgraf();
+    const bot = new Bot();
     bot.use(async () => {
       throw new Error('boom');
     });
@@ -35,7 +35,7 @@ describe('Maxgraf.handleUpdate', () => {
   });
 
   it('delegates errors to .catch(handler)', async () => {
-    const bot = new Maxgraf();
+    const bot = new Bot();
     let handled: { err: unknown; update: unknown } | undefined;
 
     bot.catch((err, ctx) => {
@@ -54,7 +54,7 @@ describe('Maxgraf.handleUpdate', () => {
   });
 
   it('injects sender for ctx.reply and throws NotImplemented by default', async () => {
-    const bot = new Maxgraf({
+    const bot = new Bot({
       sender: async (_ctx, text) => `sent:${text}`,
     });
 
@@ -67,7 +67,7 @@ describe('Maxgraf.handleUpdate', () => {
 
     await bot.handleUpdate({ message: { text: 'hello' } });
 
-    const bot2 = new Maxgraf();
+    const bot2 = new Bot();
     bot2.use(Composer.on('text', async (ctx) => await ctx.reply('hi')));
     await expect(bot2.handleUpdate({ message: { text: 'hello' } })).rejects.toThrow('NotImplemented');
   });

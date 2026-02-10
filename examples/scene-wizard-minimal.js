@@ -1,4 +1,4 @@
-import { Composer, Maxgraf, createScene, createStage, session } from '../dist/index.js';
+import { Bot, Composer, createScene, createStage, session } from '../dist/index.js';
 
 function msg(text, chatId = 1, userId = 1) {
   return { message: { text }, chat_id: chatId, user_id: userId };
@@ -32,7 +32,7 @@ stage.register(
   }),
 );
 
-const bot = new Maxgraf({
+const bot = new Bot({
   sender: async (_ctx, text) => console.log(`reply: ${text}`),
 });
 

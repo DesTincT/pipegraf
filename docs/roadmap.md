@@ -4,7 +4,7 @@ This roadmap is a direction, not a commitment.
 
 ## v0.1
 
-- Core routing (Composer, Context, Maxgraf)
+- Core routing (Composer, Context, Bot)
 - Transports (polling, webhook)
 - `ctx.reply()` binding
 

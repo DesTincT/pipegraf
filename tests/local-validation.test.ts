@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Composer } from '../src/core/composer.js';
-import { Maxgraf } from '../src/core/maxgraf.js';
+import { Bot } from '../src/core/bot.js';
 
 interface FakeMessageUpdate {
   type: 'message_created';
@@ -20,7 +20,7 @@ describe('local validation (v0.1)', () => {
     const replies: { text: string; extra: unknown }[] = [];
     let caught = 0;
 
-    const bot = new Maxgraf({
+    const bot = new Bot({
       sender: async (_ctx, text, extra) => {
         replies.push({ text, extra });
       },
@@ -76,7 +76,7 @@ describe('local validation (v0.1)', () => {
 
     // 3) Middleware order (global wraps handlers deterministically)
     const startTrace: string[] = [];
-    const orderBot = new Maxgraf();
+    const orderBot = new Bot();
     orderBot.use(async (_ctx, next) => {
       startTrace.push('global:before');
       await next();
@@ -89,7 +89,7 @@ describe('local validation (v0.1)', () => {
     expect(startTrace).toEqual(['global:before', 'start', 'global:after']);
 
     // 4) Error handling
-    const errorBot = new Maxgraf();
+    const errorBot = new Bot();
     let errorCaught = 0;
     errorBot.catch(() => {
       errorCaught += 1;
@@ -101,13 +101,13 @@ describe('local validation (v0.1)', () => {
     await errorBot.handleUpdate(msg('/start'));
     expect(errorCaught).toBe(2);
 
-    // 5) ctx.reply behavior (local) + Maxgraf.reply middleware
-    const replyBot = new Maxgraf({
+    // 5) ctx.reply behavior (local) + Bot.reply middleware
+    const replyBot = new Bot({
       sender: async (_ctx, text, extra) => {
         replies.push({ text, extra });
       },
     });
-    replyBot.start(Maxgraf.reply('hello'));
+    replyBot.start(Bot.reply('hello'));
     await replyBot.handleUpdate(msg('/start'));
     expect(replies).toEqual(
       expect.arrayContaining([

@@ -1,4 +1,4 @@
-# Telegraf architecture notes (for maxgraf v0.1)
+# Telegraf architecture notes
 
 ## Scope (pinned)
 
@@ -171,15 +171,15 @@ Many Telegram method shorthands call `ctx.assert(...)` to fail with a consistent
 
 Reference: `https://github.com/telegraf/telegraf/blob/c591338/src/context.ts`
 
-## What we replicate vs simplify in maxgraf v0.1
+## What we replicate vs simplify
 
-### Replicate (v0.1)
+### Replicate
 
 - Middleware composition model (async chain with `next()`).
 - `next()` multiple-call guard (`next() called multiple times`), fail fast.
 - Errors bubble by default (don’t silently swallow).
 
-### Simplify (v0.1)
+### Simplify
 
 - No Telegram-specific update types, filters, or parsing helpers unless a feature requires them.
 - Narrow trigger surface (start with string/regex/function triggers; avoid Telegraf’s full set of entity helpers).
@@ -208,6 +208,6 @@ Copy/paste:
 > <short excerpt>
 > ```
 >
-> In maxgraf v0.1 we **replicate**: <replicate item(s)>.
+> In this framework we **replicate**: <replicate item(s)>.
 > We **simplify**: <simplify item(s)>.
 > If you need Telegraf parity for <edge case>, please open an issue with a concrete example update + desired behavior.

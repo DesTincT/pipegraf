@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { Maxgraf } from '../src/core/maxgraf.js';
+import { Bot } from '../src/core/bot.js';
+import { createMaxAdapter } from '../src/adapters/max/index.js';
 
-describe('Maxgraf.launch / stop', () => {
-  it('constructs with token and can handleUpdate with injected sender', async () => {
-    const bot = new Maxgraf('token', {
+describe('Bot.launch / stop', () => {
+  it('constructs with sender and can handleUpdate', async () => {
+    const bot = new Bot({
       sender: async (_ctx, text) => `sent:${text}`,
     });
 
@@ -13,10 +14,10 @@ describe('Maxgraf.launch / stop', () => {
       expect(result).toBe('sent:hi');
     });
 
-    await bot.handleUpdate({ message: { text: 'hello' } });
+    await bot.handleUpdate({ message: { text: 'hello' }, chat_id: 1 });
   });
 
-  it('launch({ polling }) processes normalized MAX updates and stop() stops polling', async () => {
+  it('launch({ polling }) processes normalized updates and stop() stops polling', async () => {
     const updates = [
       {
         update_id: 1,
@@ -32,7 +33,7 @@ describe('Maxgraf.launch / stop', () => {
           getUpdatesCalls += 1;
           return { marker: String(getUpdatesCalls), updates: getUpdatesCalls === 1 ? updates : [] };
         },
-        sendMessageToChat: async () => ({}) as unknown,
+        sendMessageToChat: async () => ({}),
       },
     };
 
@@ -42,9 +43,10 @@ describe('Maxgraf.launch / stop', () => {
       resolveProcessed = resolve;
     });
 
-    const bot = new Maxgraf('token', {
+    const bot = new Bot({
+      adapter: createMaxAdapter({ token: 'token' }),
+      adapterConfig: {},
       sdk,
-      sender: async () => undefined,
     });
 
     bot.hears('hi', async () => {

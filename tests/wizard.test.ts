@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Maxgraf } from '../src/core/maxgraf.js';
+import { Bot } from '../src/core/bot.js';
 import { session } from '../src/middleware/session.js';
 import { createStage } from '../src/scenes/stage.js';
 import { createWizard } from '../src/scenes/wizard.js';
@@ -29,7 +29,7 @@ describe('wizard (v0.2)', () => {
       ]),
     );
 
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(session());
     bot.use(stage.middleware());
 
@@ -58,7 +58,7 @@ describe('wizard (v0.2)', () => {
       ]),
     );
 
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(session());
     bot.use(stage.middleware());
     bot.start(stage.enter('wiz'));

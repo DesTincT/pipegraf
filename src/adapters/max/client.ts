@@ -1,12 +1,10 @@
 import { Bot } from '@maxhub/max-bot-api';
 
-import type { MaxBotApi } from './sdk.js';
-
 export interface CreateMaxBotApiOptions {
   token: string;
 }
 
-export function createMaxBotApi({ token }: CreateMaxBotApiOptions): MaxBotApi {
+export function createMaxBotApi({ token }: CreateMaxBotApiOptions) {
   const bot = new Bot(token);
   return bot.api;
 }

@@ -1,4 +1,4 @@
-import { Maxgraf } from '../../src/core/maxgraf.js';
+import { Bot } from '../../src/core/bot.js';
 import type { ReplySender } from '../../src/core/context.js';
 
 export type MockUpdateType = 'text' | 'message' | 'callback_query' | 'inline_query';
@@ -55,7 +55,7 @@ export interface CreateTestBotOptions {
 }
 
 export function createTestBot(options: CreateTestBotOptions = {}): {
-  bot: Maxgraf;
+  bot: Bot;
   senderSpy: ReplySender;
   senderCalls: readonly { text: string; extra: unknown }[];
 } {
@@ -68,7 +68,7 @@ export function createTestBot(options: CreateTestBotOptions = {}): {
       return undefined;
     });
 
-  const bot = new Maxgraf({ sender: senderSpy });
+  const bot = new Bot({ sender: senderSpy });
   return { bot, senderSpy, senderCalls };
 }
 

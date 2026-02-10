@@ -10,7 +10,7 @@ Wizard state is stored in `ctx.session`, so it requires:
 ## Minimal example
 
 ```ts
-import { Maxgraf, createStage, createWizard, session } from 'maxgraf';
+import { Bot, createStage, createWizard, session } from 'maxgraf';
 
 const stage = createStage();
 stage.register(
@@ -25,7 +25,7 @@ stage.register(
   ]),
 );
 
-const bot = new Maxgraf();
+const bot = new Bot({ sender: async (_ctx, text) => console.log(text) });
 bot.use(session());
 bot.use(stage.middleware());
 bot.start(stage.enter('onboarding'));

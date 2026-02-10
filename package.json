@@ -1,14 +1,13 @@
 {
   "name": "maxgraf",
   "version": "0.9.1",
-  "description": "Node.js/TypeScript framework for building MAX messenger bots.",
+  "description": "Adapter-based Node.js/TypeScript bot framework.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DesTincT/maxgrafjs.git"
   },
   "keywords": [
-    "max",
     "bot",
     "framework",
     "nodejs",
@@ -27,6 +26,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./adapters/max": {
+      "types": "./dist/adapters/max.d.ts",
+      "import": "./dist/adapters/max.js",
+      "require": "./dist/adapters/max.cjs"
+    },
+    "./adapters/mock": {
+      "types": "./dist/adapters/mock.d.ts",
+      "import": "./dist/adapters/mock.js",
+      "require": "./dist/adapters/mock.cjs"
     }
   },
   "publishConfig": {

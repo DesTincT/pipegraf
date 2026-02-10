@@ -1,17 +1,17 @@
-import { getReplyTargetFromUpdate, sendReply, type MaxBotApi } from '../max/sdk.js';
+import type { ReplyApi } from '../adapters/types.js';
 import { getNestedRecord, isRecord } from '../utils/index.js';
 
 export type ReplySender = (ctx: Context, text: string, extra?: unknown) => Promise<unknown> | unknown;
 
 interface SenderOptions {
   sender?: ReplySender;
-  maxApi?: MaxBotApi;
+  replyApi?: ReplyApi;
 }
 
 export class Context {
   readonly update: unknown;
   readonly #sender?: ReplySender;
-  readonly #maxApi?: MaxBotApi;
+  readonly #replyApi?: ReplyApi;
 
   match?: RegExpMatchArray;
   command?: string;
@@ -32,7 +32,7 @@ export class Context {
   constructor(update: unknown, options: SenderOptions = {}) {
     this.update = update;
     this.#sender = options.sender;
-    this.#maxApi = options.maxApi;
+    this.#replyApi = options.replyApi;
   }
 
   get message(): Record<string, unknown> | undefined {
@@ -65,7 +65,6 @@ export class Context {
       if (typeof action === 'string') return action;
     }
 
-    // Backward compatibility for older internal shapes/tests.
     const data = cq['data'];
     return typeof data === 'string' ? data : undefined;
   }
@@ -83,10 +82,10 @@ export class Context {
       return await Promise.resolve(this.#sender(this, text, extra));
     }
 
-    if (this.#maxApi) {
-      const target = getReplyTargetFromUpdate(this.update);
+    if (this.#replyApi) {
+      const target = this.#replyApi.getReplyTargetFromUpdate(this.update);
       if (!target) throw new Error('NotImplemented');
-      return await sendReply(this.#maxApi, { target, text, extra });
+      return await this.#replyApi.sendReply(target, text, extra);
     }
 
     throw new Error('NotImplemented');

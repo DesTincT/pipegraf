@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { Composer } from '../src/core/composer.js';
-import { Maxgraf } from '../src/core/maxgraf.js';
+import { Bot } from '../src/core/bot.js';
 import { session } from '../src/middleware/session.js';
 import { createScene } from '../src/scenes/scene.js';
 import { createStage } from '../src/scenes/stage.js';
@@ -20,7 +20,7 @@ describe('scenes/stage (v0.2)', () => {
     stage.register(createScene('wizard'));
 
     const seen: (string | null)[] = [];
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(session());
     bot.use(stage.middleware());
 
@@ -45,7 +45,7 @@ describe('scenes/stage (v0.2)', () => {
       }),
     );
 
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(session());
     bot.use(stage.middleware());
 
@@ -76,7 +76,7 @@ describe('scenes/stage (v0.2)', () => {
 
     const currents: (string | null)[] = [];
 
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(session());
     bot.use(stage.middleware());
 
@@ -96,7 +96,7 @@ describe('scenes/stage (v0.2)', () => {
     const stage = createStage();
     stage.register(createScene('wizard'));
 
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(stage.middleware());
 
     await expect(bot.handleUpdate(msg('hi'))).rejects.toThrow('Session middleware is required for scenes');

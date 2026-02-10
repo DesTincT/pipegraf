@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import { Composer } from '../src/core/composer.js';
-import { Maxgraf } from '../src/core/maxgraf.js';
+import { Bot } from '../src/core/bot.js';
 
 describe('polling transport', () => {
   it('processes updates in order and stop() terminates the loop', async () => {
     const calls: string[] = [];
-    const bot = new Maxgraf();
+    const bot = new Bot();
 
     let resolveProcessed: (() => void) | undefined;
     const processed = new Promise<void>((resolve) => {
@@ -49,7 +49,7 @@ describe('polling transport', () => {
   });
 
   it('advances offset based on update_id', async () => {
-    const bot = new Maxgraf();
+    const bot = new Bot();
     const offsets: (number | undefined)[] = [];
 
     const updates = [
@@ -88,7 +88,7 @@ describe('polling transport', () => {
 
   it('dedupes repeated update_id within TTL', async () => {
     const calls: string[] = [];
-    const bot = new Maxgraf();
+    const bot = new Bot();
 
     bot.use(
       Composer.on('text', async (ctx) => {
@@ -117,7 +117,7 @@ describe('polling transport', () => {
 
   it('expires dedupe entries after TTL', async () => {
     const calls: string[] = [];
-    const bot = new Maxgraf();
+    const bot = new Bot();
 
     bot.use(
       Composer.on('text', async (ctx) => {
@@ -152,7 +152,7 @@ describe('polling transport', () => {
 
   it('dedupes using dedupe.getKey when update_id is missing', async () => {
     const calls: string[] = [];
-    const bot = new Maxgraf();
+    const bot = new Bot();
 
     bot.use(
       Composer.on('text', async (ctx) => {

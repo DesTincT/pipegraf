@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Maxgraf } from '../src/core/maxgraf.js';
+import { Bot } from '../src/core/bot.js';
 import { session } from '../src/middleware/session.js';
 
 function msg(text: string, chatId?: number, userId?: number): unknown {
@@ -17,7 +17,7 @@ describe('session middleware', () => {
       count?: number;
     }
 
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(session<S>());
 
     bot.start(async (ctx) => {
@@ -38,7 +38,7 @@ describe('session middleware', () => {
   });
 
   it('different keys are isolated', async () => {
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(session<{ seen?: string }>());
 
     bot.use(async (ctx, next) => {
@@ -69,7 +69,7 @@ describe('session middleware', () => {
   it('middleware order: ctx.session exists only after session middleware', async () => {
     const traces: ('before' | 'after')[] = [];
 
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(async (ctx, next) => {
       if (ctx.session === undefined) traces.push('before');
       await next();
@@ -85,7 +85,7 @@ describe('session middleware', () => {
   });
 
   it('missing key uses fallback and persists across updates', async () => {
-    const bot = new Maxgraf({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined });
     bot.use(session<{ n?: number }>({ fallbackKey: 'global' }));
 
     bot.use(async (ctx, next) => {

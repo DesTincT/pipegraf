@@ -7,11 +7,11 @@ This is intended for local development and simple deployments. The default store
 ## Usage
 
 ```ts
-import { Maxgraf, session } from 'maxgraf';
+import { Bot, session } from 'maxgraf';
 
 type Session = { count?: number };
 
-const bot = new Maxgraf();
+const bot = new Bot({ sender: async (_ctx, text) => console.log(text) });
 bot.use(session<Session>());
 
 bot.start((ctx) => {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { Maxgraf } from '../src/core/maxgraf.js';
+import { Bot } from '../src/core/bot.js';
 
 describe('webhook transport', () => {
   it('webhookCallback invokes handleUpdate', async () => {
-    const bot = new Maxgraf();
+    const bot = new Bot();
     const calls: unknown[] = [];
 
     bot.use(async (ctx) => {
@@ -18,7 +18,7 @@ describe('webhook transport', () => {
   });
 
   it('webhookCallback calls onError when handleUpdate throws', async () => {
-    const bot = new Maxgraf();
+    const bot = new Bot();
     bot.use(async () => {
       throw new Error('boom');
     });

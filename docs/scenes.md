@@ -7,7 +7,7 @@ Scene state is stored in `ctx.session`, so `session()` middleware is required.
 ## Usage
 
 ```ts
-import { Maxgraf, createScene, createStage, session } from 'maxgraf';
+import { Bot, createScene, createStage, session } from 'maxgraf';
 
 const stage = createStage();
 
@@ -17,7 +17,7 @@ stage.register(
   }),
 );
 
-const bot = new Maxgraf();
+const bot = new Bot({ sender: async (_ctx, text) => console.log(text) });
 bot.use(session());
 bot.use(stage.middleware());
 

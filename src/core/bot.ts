@@ -3,49 +3,44 @@ import { Composer } from './composer.js';
 import type { Filter, Trigger } from './composer.js';
 import { Context, type ReplySender } from './context.js';
 import { createPollingController, type PollingController, type PollingOptions } from '../transports/polling.js';
-import { createMaxPollingController } from '../transports/max-polling.js';
 import { createWebhookCallback, type WebhookCallback, type WebhookOptions } from '../transports/webhook.js';
-import type { MaxBotApi } from '../max/sdk.js';
+import type { BotAdapter, PollingConfig, ReplyApi } from '../adapters/types.js';
 
 export type ErrorHandler = (err: unknown, ctx: Context) => unknown | Promise<unknown>;
 
-export interface MaxgrafOptions {
+export interface BotOptions {
   sender?: ReplySender;
-  maxApi?: MaxBotApi;
-  sdk?: unknown; // test/advanced override used by launch({ polling })
+  replyApi?: ReplyApi;
+  adapter?: BotAdapter;
+  adapterConfig?: Record<string, unknown>;
+  sdk?: unknown; // test/advanced override for adapter createPollingController
 }
 
 export interface LaunchOptions {
   polling?: {
     intervalMs?: number;
     dedupeTtlMs?: number;
+    [key: string]: unknown;
   };
 }
 
-export class Maxgraf {
+export class Bot {
   readonly #middlewares: Middleware<Context>[] = [];
   #composed?: (ctx: Context) => Promise<unknown>;
   #sender?: ReplySender;
-  #maxApi?: MaxBotApi;
-  #token?: string;
+  #replyApi?: ReplyApi;
+  #adapter?: BotAdapter;
+  #adapterConfig?: Record<string, unknown>;
   #pollingController?: PollingController;
   #sdk?: unknown;
   #errorHandler?: ErrorHandler;
 
-  constructor(token: string, options?: MaxgrafOptions);
-  constructor(options?: MaxgrafOptions);
-  constructor(tokenOrOptions: string | MaxgrafOptions = {}, maybeOptions?: MaxgrafOptions) {
-    if (typeof tokenOrOptions === 'string') {
-      this.#token = tokenOrOptions;
-      this.#sender = maybeOptions?.sender;
-      this.#maxApi = maybeOptions?.maxApi;
-      this.#sdk = maybeOptions?.sdk;
-      return;
-    }
-
-    this.#sender = tokenOrOptions.sender;
-    this.#maxApi = tokenOrOptions.maxApi;
-    this.#sdk = tokenOrOptions.sdk;
+  constructor(options: BotOptions = {}) {
+    this.#sender = options.sender;
+    this.#replyApi = options.replyApi;
+    this.#adapter = options.adapter;
+    this.#adapterConfig = options.adapterConfig ?? {};
+    this.#sdk = options.sdk;
   }
 
   use(...mws: readonly Middleware<Context>[]): this {
@@ -59,8 +54,17 @@ export class Maxgraf {
     return this;
   }
 
+  #resolveReplyApi(): ReplyApi | undefined {
+    if (this.#replyApi) return this.#replyApi;
+    if (this.#adapter && this.#adapterConfig) {
+      this.#replyApi = this.#adapter.createReplyApi(this.#adapterConfig);
+      return this.#replyApi;
+    }
+    return undefined;
+  }
+
   async handleUpdate(update: unknown): Promise<unknown> {
-    const ctx = new Context(update, { sender: this.#sender, maxApi: this.#maxApi });
+    const ctx = new Context(update, { sender: this.#sender, replyApi: this.#resolveReplyApi() });
     try {
       const fn = this.#getComposed();
       return await fn(ctx);
@@ -78,22 +82,22 @@ export class Maxgraf {
 
   async launch(options: LaunchOptions = {}): Promise<void> {
     if (options.polling) {
-      const token = this.#token;
-      if (!token) {
-        throw new Error('NotImplemented');
+      const adapter = this.#adapter;
+      if (!adapter?.createPollingController) {
+        throw new Error('Adapter with createPollingController is required for polling launch');
       }
 
-      const result = createMaxPollingController(this, {
-        token,
-        intervalMs: options.polling.intervalMs,
-        dedupeTtlMs: options.polling.dedupeTtlMs,
+      const pollConfig: PollingConfig = {
+        ...this.#adapterConfig,
+        ...options.polling,
         sdk: this.#sdk,
-      });
-      this.#pollingController = result.controller;
-      this.#sdk = result.sdk;
+      };
 
-      if (!this.#maxApi) {
-        this.#maxApi = result.api as MaxBotApi;
+      const result = adapter.createPollingController(this, pollConfig);
+      this.#pollingController = result.controller;
+
+      if (result.api) {
+        this.#replyApi = result.api;
       }
     }
   }

@@ -1,49 +1,48 @@
-## Maxgraf.js
+## Bot framework
 
-Maxgraf.js is a Node.js/TypeScript framework for building bots on MAX messenger with a Telegraf-inspired middleware and routing model.
+A Node.js/TypeScript adapter-based bot framework with a Telegraf-inspired middleware and routing model.
 
-NPM - https://www.npmjs.com/package/maxgraf
+## What it is
 
-## What is Maxgraf.js
-
-Maxgraf.js routes incoming MAX updates through a deterministic middleware pipeline, with routing helpers inspired by Telegraf’s DX and programming model.
+The framework routes incoming updates through a deterministic middleware pipeline, with routing helpers inspired by Telegraf’s DX and programming model.
 
 It is **not a fork** of Telegraf.
 
-## Why Maxgraf.js exists
+## Why it exists
 
-The MAX SDK gives you the primitives to talk to the platform. In practice, production bots also need a predictable routing model, clear middleware ordering, and explicit error boundaries.
+Platform SDKs give you primitives to talk to the messaging platform. In practice, production bots also need a predictable routing model, clear middleware ordering, and explicit error boundaries.
 
-Maxgraf.js exists to provide a small, deterministic framework layer focused on DX and production-oriented defaults without changing how you talk to the official SDK.
+This framework provides a small, deterministic layer focused on DX and production-oriented defaults, with platform-specific behavior delegated to adapters.
 
-## Features (current, implemented)
+## Features
 
 - **Middleware pipeline**: Koa-style `(ctx, next)` middleware composition
 - **Routing helpers**: `bot.on`, `bot.hears`, `bot.command`, `bot.action`
-- **Sugar API**: `bot.start`, `bot.help`, `Maxgraf.reply(...)`
+- **Sugar API**: `bot.start`, `bot.help`, `Bot.reply(...)`
 - **Slash-only command parsing**: commands match `/name` (not `name`)
-- **`ctx.reply()` via official MAX SDK**: handled internally when launching with a token
+- **`ctx.reply()`**: handled by adapter or custom sender
 - **Polling + webhook**: `bot.launch({ polling })` and `bot.webhookCallback()`
 - **TTL-based update deduplication**: in-memory TTL store keyed by stable update identifiers (polling)
 - **Deterministic behavior**: stable middleware order, no hidden concurrency
 - **Error boundary**: `bot.catch((err, ctx) => ...)`
+- **Adapter-based**: platform coupling is isolated in adapter implementations
 
 ## Quick start
 
-This project does not assume npm publishing yet. The snippet below shows usage assuming `maxgraf` is available in your project.
+This project does not assume npm publishing yet. The snippet below shows usage assuming the package is available in your project.
 
 ```ts
-import { Maxgraf } from 'maxgraf';
+import { Bot, createMockAdapter } from 'maxgraf';
 
-const token = process.env.MAX_BOT_TOKEN;
-if (!token) throw new Error('MAX_BOT_TOKEN is required');
-
-const bot = new Maxgraf(token);
+const bot = new Bot({
+  adapter: createMockAdapter(),
+  adapterConfig: {},
+});
 
 bot.start(async (ctx) => await ctx.reply('Welcome'));
 bot.help(async (ctx) => await ctx.reply('Help: /start /help /hipster'));
 bot.hears('hi', async (ctx) => await ctx.reply('Hey there'));
-bot.command('hipster', Maxgraf.reply('λ'));
+bot.command('hipster', Bot.reply('λ'));
 
 bot.catch(async (err, ctx) => {
   console.error(err);
@@ -60,60 +59,25 @@ process.once('SIGINT', () => void bot.stop());
 process.once('SIGTERM', () => void bot.stop());
 ```
 
-## Keyboards (inline buttons)
-
-Maxgraf does not introduce a custom keyboard format.
-
-Instead, it re-exports the official MAX Keyboard API, so you can build inline keyboards exactly as described in the MAX Bot API documentation, without importing the SDK directly.
-
-```ts
-import { Maxgraf, Keyboard } from 'maxgraf';
-
-const bot = new Maxgraf(process.env.MAX_BOT_TOKEN);
-
-const mainMenu = () =>
-  Keyboard.inlineKeyboard([
-    [Keyboard.button.callback('ℹ️ Help', 'menu:help')],
-    [Keyboard.button.callback('🧙 Wizard', 'menu:wizard')],
-    [Keyboard.button.callback('👍 Like', 'like'), Keyboard.button.callback('👎 Dislike', 'dislike')],
-    [Keyboard.button.link('🌐 Open max.ru', 'https://max.ru')],
-  ]);
-
-bot.start((ctx) =>
-  ctx.reply('Welcome! Use buttons below:', {
-    attachments: [mainMenu()],
-  }),
-);
-
-bot.action('menu:help', (ctx) =>
-  ctx.reply('This is the help screen.', {
-    attachments: [mainMenu()],
-  }),
-);
-
-bot.action('like', (ctx) => ctx.reply('❤️ Thanks!'));
-bot.action('dislike', (ctx) => ctx.reply('😢 Sad but noted'));
-
-await bot.launch({ polling: { intervalMs: 250, dedupeTtlMs: 60_000 } });
-```
+Platform-specific adapters (inline keyboards, etc.) are available via subpath exports. See the examples and adapter documentation.
 
 ## Feature comparison
 
-| Capability                           | Telegraf.js | Maxgraf.js (current) | Maxgraf.js (planned) |
-| ------------------------------------ | ----------- | -------------------- | -------------------- |
-| Telegraf-like DX                     | ✅          | ✅                   | ✅                   |
-| Middleware pipeline                  | ✅          | ✅                   | ✅                   |
-| Sugar API (start/help/hears/command) | ✅          | ✅                   | ✅                   |
-| Slash command handling               | ✅          | ✅                   | ✅                   |
-| `ctx.reply`                          | ✅          | ✅                   | ✅                   |
-| `ctx.command` / `ctx.args`           | ✅          | ⚠️                   | ✅                   |
-| Session support                      | ✅          | ✅                   | ✅                   |
-| Scenes / dialogs                     | ✅          | ✅                   | ✅                   |
-| Wizard flows                         | ✅          | ✅                   | ✅                   |
-| Testing helpers                      | ✅          | ⚠️                   | ✅                   |
-| Update deduplication (TTL)           | ⚠️          | ✅                   | ✅                   |
-| Deterministic behavior               | ⚠️          | ✅                   | ✅                   |
-| Platform coupling                    | Telegram    | MAX                  | MAX                  |
+| Capability                           | Telegraf.js | This framework |
+| ------------------------------------ | ----------- | -------------- |
+| Telegraf-like DX                     | ✅          | ✅             |
+| Middleware pipeline                  | ✅          | ✅             |
+| Sugar API (start/help/hears/command) | ✅          | ✅             |
+| Slash command handling               | ✅          | ✅             |
+| `ctx.reply`                          | ✅          | ✅             |
+| `ctx.command` / `ctx.args`           | ✅          | ⚠️             |
+| Session support                      | ✅          | ✅             |
+| Scenes / dialogs                     | ✅          | ✅             |
+| Wizard flows                         | ✅          | ✅             |
+| Testing helpers                      | ✅          | ⚠️             |
+| Update deduplication (TTL)           | ⚠️          | ✅             |
+| Deterministic behavior               | ⚠️          | ✅             |
+| Platform coupling                    | Telegram    | Adapter-based  |
 
 Legend: ✅ supported, ⚠️ partial / minimal, ❌ not supported.
 
@@ -126,7 +90,7 @@ Legend: ✅ supported, ⚠️ partial / minimal, ❌ not supported.
 
 ## Project status
 
-Maxgraf.js is **v0.x**. The API may change while the focus is stabilizing core DX and runtime behavior.
+The framework is **v0.x**. The API may change while the focus is stabilizing core DX and runtime behavior.
 
 ## Contributing
 
