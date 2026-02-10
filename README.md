@@ -2,6 +2,8 @@
 
 Maxgraf.js is a Node.js/TypeScript framework for building bots on MAX messenger with a Telegraf-inspired middleware and routing model.
 
+NPM - https://www.npmjs.com/package/maxgraf
+
 ## What is Maxgraf.js
 
 Maxgraf.js routes incoming MAX updates through a deterministic middleware pipeline, with routing helpers inspired by Telegraf’s DX and programming model.
