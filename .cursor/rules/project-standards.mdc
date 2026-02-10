@@ -49,6 +49,7 @@ alwaysApply: true
    - no generic utility grab-bags
    - no configuration objects “for later”
 9) Prefer boring, explicit code over cleverness.
+10) DO NOT USE --trailer in 'git commit' command
 
 ## Testing
 - Every core behavior must be covered by unit tests.

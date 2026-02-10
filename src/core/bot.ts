@@ -2,18 +2,36 @@ import { compose, type Middleware } from './compose.js';
 import { Composer } from './composer.js';
 import type { Filter, Trigger } from './composer.js';
 import { Context, type ReplySender } from './context.js';
-import { createPollingController, type PollingController, type PollingOptions } from '../transports/polling.js';
-import { createWebhookCallback, type WebhookCallback, type WebhookOptions } from '../transports/webhook.js';
-import type { BotAdapter, PollingConfig, ReplyApi } from '../adapters/types.js';
+import { createCanonicalAdapter } from './canonical-adapter.js';
+import type {
+  Adapter,
+  CreatePollingTransport,
+  PollingTransport,
+  PollingTransportOptions,
+  ReplyHandler,
+  Transport,
+  WebhookCallback,
+  WebhookOptions,
+} from './contracts.js';
 
 export type ErrorHandler = (err: unknown, ctx: Context) => unknown | Promise<unknown>;
 
 export interface BotOptions {
   sender?: ReplySender;
-  replyApi?: ReplyApi;
-  adapter?: BotAdapter;
+  replyHandler?: ReplyHandler;
+  replyApi?: ReplyHandler; // alias for replyHandler, structural compatibility
+  adapter?: Adapter | BotAdapterLike;
   adapterConfig?: Record<string, unknown>;
-  sdk?: unknown; // test/advanced override for adapter createPollingController
+  createPollingTransport?: CreatePollingTransport;
+  sdk?: unknown;
+}
+
+export interface BotAdapterLike {
+  createReplyApi?(config: Record<string, unknown>): ReplyHandler;
+  createPollingController?(
+    bot: { handleUpdate: (update: unknown) => Promise<unknown> },
+    config: Record<string, unknown>,
+  ): { controller: Transport & { stop(): Promise<void> }; api?: ReplyHandler };
 }
 
 export interface LaunchOptions {
@@ -25,21 +43,32 @@ export interface LaunchOptions {
 }
 
 export class Bot {
+  static createPollingTransport?: CreatePollingTransport;
+
   readonly #middlewares: Middleware<Context>[] = [];
   #composed?: (ctx: Context) => Promise<unknown>;
   #sender?: ReplySender;
-  #replyApi?: ReplyApi;
-  #adapter?: BotAdapter;
+  #replyHandler?: ReplyHandler;
+  #adapter?: Adapter;
+  #botAdapter?: BotAdapterLike;
   #adapterConfig?: Record<string, unknown>;
-  #pollingController?: PollingController;
+  #createPollingTransport?: CreatePollingTransport;
+  #transport?: Transport & { stop(): Promise<void> };
   #sdk?: unknown;
   #errorHandler?: ErrorHandler;
 
   constructor(options: BotOptions = {}) {
     this.#sender = options.sender;
-    this.#replyApi = options.replyApi;
-    this.#adapter = options.adapter;
+    this.#replyHandler = options.replyHandler ?? options.replyApi;
     this.#adapterConfig = options.adapterConfig ?? {};
+
+    const adapterOpt = options.adapter;
+    if (adapterOpt && 'createContext' in adapterOpt && 'reply' in adapterOpt) {
+      this.#adapter = adapterOpt as Adapter;
+    } else if (adapterOpt && ('createReplyApi' in adapterOpt || 'createPollingController' in adapterOpt)) {
+      this.#botAdapter = adapterOpt as BotAdapterLike;
+    }
+    this.#createPollingTransport = options.createPollingTransport;
     this.#sdk = options.sdk;
   }
 
@@ -54,17 +83,38 @@ export class Bot {
     return this;
   }
 
-  #resolveReplyApi(): ReplyApi | undefined {
-    if (this.#replyApi) return this.#replyApi;
-    if (this.#adapter && this.#adapterConfig) {
-      this.#replyApi = this.#adapter.createReplyApi(this.#adapterConfig);
-      return this.#replyApi;
+  #resolveAdapter(): Adapter | undefined {
+    if (this.#adapter) return this.#adapter;
+
+    if (this.#sender || this.#replyHandler) {
+      const reply =
+        this.#sender
+          ? async (ctx: { update: unknown }, text: string, extra?: unknown) =>
+              Promise.resolve(this.#sender!(ctx as Context, text, extra))
+          : async (ctx: { update: unknown }, text: string, extra?: unknown) => {
+              const target = this.#replyHandler!.getReplyTargetFromUpdate(ctx.update);
+              if (!target) throw new Error('NotImplemented');
+              return await this.#replyHandler!.sendReply(target, text, extra);
+            };
+      return createCanonicalAdapter(reply);
     }
+
+    if (this.#botAdapter?.createReplyApi) {
+      const api = this.#botAdapter.createReplyApi(this.#adapterConfig ?? {});
+      const reply = async (ctx: { update: unknown }, text: string, extra?: unknown) => {
+        const target = api.getReplyTargetFromUpdate(ctx.update);
+        if (!target) throw new Error('NotImplemented');
+        return await api.sendReply(target, text, extra);
+      };
+      return createCanonicalAdapter(reply);
+    }
+
     return undefined;
   }
 
   async handleUpdate(update: unknown): Promise<unknown> {
-    const ctx = new Context(update, { sender: this.#sender, replyApi: this.#resolveReplyApi() });
+    const adapter = this.#resolveAdapter();
+    const ctx = new Context(update, { adapter });
     try {
       const fn = this.#getComposed();
       return await fn(ctx);
@@ -76,42 +126,58 @@ export class Bot {
     }
   }
 
-  startPolling(options: PollingOptions): PollingController {
-    return createPollingController(this, options);
+  startPolling(options: PollingTransportOptions): PollingTransport {
+    const fn = this.#createPollingTransport ?? (this.constructor as typeof Bot).createPollingTransport;
+    if (!fn) {
+      throw new Error('createPollingTransport is required for startPolling; pass it in BotOptions or set Bot.createPollingTransport');
+    }
+    const transport = fn(options);
+    transport.start((update) => this.handleUpdate(update));
+    return transport;
   }
 
   async launch(options: LaunchOptions = {}): Promise<void> {
     if (options.polling) {
-      const adapter = this.#adapter;
+      const adapter = this.#botAdapter;
       if (!adapter?.createPollingController) {
         throw new Error('Adapter with createPollingController is required for polling launch');
       }
 
-      const pollConfig: PollingConfig = {
+      const pollConfig = {
         ...this.#adapterConfig,
         ...options.polling,
         sdk: this.#sdk,
       };
 
       const result = adapter.createPollingController(this, pollConfig);
-      this.#pollingController = result.controller;
+      this.#transport = result.controller;
 
       if (result.api) {
-        this.#replyApi = result.api;
+        this.#replyHandler = result.api;
       }
     }
   }
 
   async stop(): Promise<void> {
-    if (this.#pollingController) {
-      const c = this.#pollingController;
-      this.#pollingController = undefined;
-      await c.stop();
+    if (this.#transport) {
+      const t = this.#transport;
+      this.#transport = undefined;
+      await t.stop();
     }
   }
 
   webhookCallback(options?: WebhookOptions): WebhookCallback {
-    return createWebhookCallback(this, options);
+    return async (update) => {
+      try {
+        await this.handleUpdate(update);
+      } catch (err) {
+        if (options?.onError) {
+          await options.onError(err, update);
+          return;
+        }
+        throw err;
+      }
+    };
   }
 
   start(...mws: readonly Middleware<Context>[]): this {

@@ -1,4 +1,4 @@
-import type { UpdateHandler } from '../core/types.js';
+import type { OnUpdate, Transport } from '../core/contracts.js';
 import { isRecord } from '../utils/index.js';
 
 export type PollingGetUpdates = (params: { offset?: number; signal: AbortSignal }) => Promise<readonly unknown[]>;
@@ -14,9 +14,8 @@ export interface PollingOptions {
   };
 }
 
-export interface PollingController {
-  stop: () => Promise<void>;
-  isRunning: () => boolean;
+export interface PollingController extends Transport {
+  isRunning(): boolean;
 }
 
 function defaultGetUpdateId(update: unknown): number | undefined {
@@ -66,7 +65,7 @@ function cleanupDedupeStore(store: Map<string | number, number>, now: number, ma
   }
 }
 
-export function createPollingController(bot: UpdateHandler, options: PollingOptions): PollingController {
+export function createPollingTransport(options: PollingOptions): PollingController {
   const intervalMs = options.intervalMs ?? 250;
   const getUpdateId = options.dedupe?.getUpdateId ?? defaultGetUpdateId;
   const getKey = options.dedupe?.getKey ?? ((u) => defaultGetKey(u, getUpdateId));
@@ -75,69 +74,88 @@ export function createPollingController(bot: UpdateHandler, options: PollingOpti
   const dedupeEnabled = ttlMs > 0 && maxSize > 0;
 
   const abortController = new AbortController();
-  let running = true;
+  let running = false;
+  let onUpdateHandler: OnUpdate | undefined;
+  let loopPromise: Promise<void> | undefined;
 
   let lastUpdateId: number | undefined;
   const seen = new Map<string | number, number>();
   let nextCleanupAt = 0;
 
-  const loop = (async () => {
-    while (!abortController.signal.aborted) {
-      const offset = lastUpdateId === undefined ? undefined : lastUpdateId + 1;
-
-      let updates: readonly unknown[];
-      try {
-        updates = await options.getUpdates({ offset, signal: abortController.signal });
-      } catch (_err) {
-        if (abortController.signal.aborted) break;
-        throw _err;
-      }
-
-      for (const update of updates) {
-        const id = getUpdateId(update);
-        if (id !== undefined) {
-          lastUpdateId = lastUpdateId === undefined ? id : Math.max(lastUpdateId, id);
-        }
-
-        const key = getKey(update);
-
-        if (dedupeEnabled && key !== undefined) {
-          const now = Date.now();
-          if (now >= nextCleanupAt) {
-            cleanupDedupeStore(seen, now, maxSize);
-            nextCleanupAt = now + ttlMs;
-          }
-
-          const expiresAt = seen.get(key);
-          if (expiresAt !== undefined && expiresAt > now) {
-            continue;
-          }
-        }
-
-        await bot.handleUpdate(update);
-
-        if (dedupeEnabled && key !== undefined) {
-          const now = Date.now();
-          seen.set(key, now + ttlMs);
-          if (seen.size > maxSize) {
-            cleanupDedupeStore(seen, now, maxSize);
-          }
-        }
-      }
-
-      if (abortController.signal.aborted) break;
-      await sleep(intervalMs, abortController.signal);
-    }
-  })().finally(() => {
-    running = false;
-  });
-
   return {
-    stop: async () => {
-      if (!running) return;
-      abortController.abort();
-      await loop;
+    start(onUpdate: OnUpdate): void {
+      if (onUpdateHandler) {
+        throw new Error('Transport already started');
+      }
+      onUpdateHandler = onUpdate;
+      running = true;
+
+      loopPromise = (async () => {
+        const onUpdate = onUpdateHandler!;
+        while (!abortController.signal.aborted) {
+          const offset = lastUpdateId === undefined ? undefined : lastUpdateId + 1;
+
+          let updates: readonly unknown[];
+          try {
+            updates = await options.getUpdates({ offset, signal: abortController.signal });
+          } catch (_err) {
+            if (abortController.signal.aborted) break;
+            throw _err;
+          }
+
+          for (const update of updates) {
+            const id = getUpdateId(update);
+            if (id !== undefined) {
+              lastUpdateId = lastUpdateId === undefined ? id : Math.max(lastUpdateId, id);
+            }
+
+            const key = getKey(update);
+
+            if (dedupeEnabled && key !== undefined) {
+              const now = Date.now();
+              if (now >= nextCleanupAt) {
+                cleanupDedupeStore(seen, now, maxSize);
+                nextCleanupAt = now + ttlMs;
+              }
+
+              const expiresAt = seen.get(key);
+              if (expiresAt !== undefined && expiresAt > now) {
+                continue;
+              }
+            }
+
+            await onUpdate(update);
+
+            if (dedupeEnabled && key !== undefined) {
+              const now = Date.now();
+              seen.set(key, now + ttlMs);
+              if (seen.size > maxSize) {
+                cleanupDedupeStore(seen, now, maxSize);
+              }
+            }
+          }
+
+          if (abortController.signal.aborted) break;
+          await sleep(intervalMs, abortController.signal);
+        }
+      })().finally(() => {
+        running = false;
+      });
     },
-    isRunning: () => running,
+    stop: async (): Promise<void> => {
+      if (!running || !loopPromise) return;
+      abortController.abort();
+      await loopPromise;
+    },
+    isRunning: (): boolean => running,
   };
+}
+
+export function createPollingController(
+  bot: { handleUpdate: (update: unknown) => Promise<unknown> },
+  options: PollingOptions,
+): PollingController {
+  const transport = createPollingTransport(options);
+  transport.start((update) => bot.handleUpdate(update));
+  return transport;
 }

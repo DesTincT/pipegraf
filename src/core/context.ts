@@ -1,17 +1,18 @@
-import type { ReplyApi } from '../adapters/types.js';
+import type { Adapter, AdapterContext } from './contracts.js';
+import type { ReplyHandler } from './contracts.js';
 import { getNestedRecord, isRecord } from '../utils/index.js';
 
 export type ReplySender = (ctx: Context, text: string, extra?: unknown) => Promise<unknown> | unknown;
 
-interface SenderOptions {
+interface ContextOptions {
   sender?: ReplySender;
-  replyApi?: ReplyApi;
+  replyHandler?: ReplyHandler;
+  replyApi?: ReplyHandler; // structural alias
+  adapter?: Adapter;
 }
 
 export class Context {
   readonly update: unknown;
-  readonly #sender?: ReplySender;
-  readonly #replyApi?: ReplyApi;
 
   match?: RegExpMatchArray;
   command?: string;
@@ -29,25 +30,41 @@ export class Context {
     selectStep: (n: number) => Promise<void>;
   };
 
-  constructor(update: unknown, options: SenderOptions = {}) {
+  readonly #sender?: ReplySender;
+  readonly #replyHandler?: ReplyHandler;
+  readonly #adapter?: Adapter;
+  readonly #base?: AdapterContext;
+
+  constructor(update: unknown, options: ContextOptions = {}) {
     this.update = update;
     this.#sender = options.sender;
-    this.#replyApi = options.replyApi;
+    this.#replyHandler = options.replyHandler ?? options.replyApi;
+    this.#adapter = options.adapter;
+
+    if (this.#adapter) {
+      this.#base = this.#adapter.createContext(update);
+      this.command = this.#base.command?.name;
+      this.payload = this.#base.command?.payload ?? '';
+    }
   }
 
   get message(): Record<string, unknown> | undefined {
+    if (this.#base) return this.#base.message;
     return getNestedRecord(this.update, 'message');
   }
 
   get callbackQuery(): Record<string, unknown> | undefined {
+    if (this.#base) return this.#base.callbackQuery;
     return getNestedRecord(this.update, 'callback_query');
   }
 
   get inlineQuery(): Record<string, unknown> | undefined {
+    if (this.#base) return this.#base.inlineQuery;
     return getNestedRecord(this.update, 'inline_query');
   }
 
   get messageText(): string | undefined {
+    if (this.#base) return this.#base.messageText;
     const msg = this.message;
     if (!msg) return undefined;
     const text = msg['text'];
@@ -55,6 +72,7 @@ export class Context {
   }
 
   get callbackData(): string | undefined {
+    if (this.#base) return this.#base.callbackData;
     const cq = this.callbackQuery;
     if (!cq) return undefined;
 
@@ -69,6 +87,11 @@ export class Context {
     return typeof data === 'string' ? data : undefined;
   }
 
+  get chatId(): number | undefined {
+    if (this.#base) return this.#base.chatId;
+    return undefined;
+  }
+
   get eventType(): 'text' | 'message' | 'callback_query' | 'inline_query' | 'unknown' {
     if (this.messageText !== undefined) return 'text';
     if (this.message !== undefined) return 'message';
@@ -78,14 +101,18 @@ export class Context {
   }
 
   async reply(text: string, extra?: unknown): Promise<unknown> {
+    if (this.#adapter) {
+      return await this.#adapter.reply(this, text, extra);
+    }
+
     if (this.#sender) {
       return await Promise.resolve(this.#sender(this, text, extra));
     }
 
-    if (this.#replyApi) {
-      const target = this.#replyApi.getReplyTargetFromUpdate(this.update);
+    if (this.#replyHandler) {
+      const target = this.#replyHandler.getReplyTargetFromUpdate(this.update);
       if (!target) throw new Error('NotImplemented');
-      return await this.#replyApi.sendReply(target, text, extra);
+      return await this.#replyHandler.sendReply(target, text, extra);
     }
 
     throw new Error('NotImplemented');

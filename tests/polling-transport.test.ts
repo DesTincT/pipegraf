@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { Composer } from '../src/core/composer.js';
 import { Bot } from '../src/core/bot.js';
+import { createPollingTransport } from '../src/transports/polling.js';
+
+Bot.createPollingTransport = createPollingTransport;
 
 describe('polling transport', () => {
   it('processes updates in order and stop() terminates the loop', async () => {
@@ -45,7 +48,7 @@ describe('polling transport', () => {
     await controller.stop();
 
     expect(calls).toEqual(['a', 'b']);
-    expect(controller.isRunning()).toBe(false);
+    expect((controller as { isRunning(): boolean }).isRunning()).toBe(false);
   });
 
   it('advances offset based on update_id', async () => {
