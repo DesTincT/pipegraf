@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCanonicalAdapter } from '../src/core/canonical-adapter.js';
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { Composer } from '../src/core/composer.js';
 import { Bot } from '../src/core/bot.js';
 
@@ -25,6 +25,7 @@ describe('local validation (v0.1)', () => {
       sender: async (_ctx, text, extra) => {
         replies.push({ text, extra });
       },
+      createAdapter: createReferenceAdapter,
     });
 
     bot.catch(() => {
@@ -77,7 +78,7 @@ describe('local validation (v0.1)', () => {
 
     // 3) Middleware order (global wraps handlers deterministically)
     const startTrace: string[] = [];
-    const orderAdapter = createCanonicalAdapter(async () => undefined);
+    const orderAdapter = createReferenceAdapter(async () => undefined);
     const orderBot = new Bot({ adapter: orderAdapter });
     orderBot.use(async (_ctx, next) => {
       startTrace.push('global:before');
@@ -91,7 +92,7 @@ describe('local validation (v0.1)', () => {
     expect(startTrace).toEqual(['global:before', 'start', 'global:after']);
 
     // 4) Error handling
-    const errorAdapter = createCanonicalAdapter(async () => undefined);
+    const errorAdapter = createReferenceAdapter(async () => undefined);
     const errorBot = new Bot({ adapter: errorAdapter });
     let errorCaught = 0;
     errorBot.catch(() => {
@@ -109,6 +110,7 @@ describe('local validation (v0.1)', () => {
       sender: async (_ctx, text, extra) => {
         replies.push({ text, extra });
       },
+      createAdapter: createReferenceAdapter,
     });
     replyBot.start(Bot.reply('hello'));
     await replyBot.handleUpdate(msg('/start'));

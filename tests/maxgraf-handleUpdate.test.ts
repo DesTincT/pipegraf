@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCanonicalAdapter } from '../src/core/canonical-adapter.js';
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { Bot } from '../src/core/bot.js';
 import { Composer } from '../src/core/composer.js';
 
-const testAdapter = createCanonicalAdapter(async () => undefined);
+const testAdapter = createReferenceAdapter(async () => undefined);
 
 describe('Bot.handleUpdate', () => {
   it('runs middleware in deterministic order', async () => {
@@ -59,6 +59,7 @@ describe('Bot.handleUpdate', () => {
   it('injects sender for ctx.reply and throws NotImplemented by default', async () => {
     const bot = new Bot({
       sender: async (_ctx, text) => `sent:${text}`,
+      createAdapter: createReferenceAdapter,
     });
 
     bot.use(
@@ -70,7 +71,7 @@ describe('Bot.handleUpdate', () => {
 
     await bot.handleUpdate({ message: { text: 'hello' } });
 
-    const noReplyAdapter = createCanonicalAdapter(async () => {
+    const noReplyAdapter = createReferenceAdapter(async () => {
       throw new Error('NotImplemented');
     });
     const bot2 = new Bot({ adapter: noReplyAdapter });

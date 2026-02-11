@@ -1,4 +1,5 @@
 import { Bot } from '../../src/core/bot.js';
+import { createReferenceAdapter } from '../../src/adapters/reference-adapter/index.js';
 import type { ReplySender } from '../../src/core/context.js';
 
 export type MockUpdateType = 'text' | 'message' | 'callback_query' | 'inline_query';
@@ -68,7 +69,7 @@ export function createTestBot(options: CreateTestBotOptions = {}): {
       return undefined;
     });
 
-  const bot = new Bot({ sender: senderSpy });
+  const bot = new Bot({ sender: senderSpy, createAdapter: createReferenceAdapter });
   return { bot, senderSpy, senderCalls };
 }
 

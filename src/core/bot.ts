@@ -2,7 +2,6 @@ import { compose, type Middleware } from './compose.js';
 import { Composer } from './composer.js';
 import type { Filter, Trigger } from './composer.js';
 import { Context, type ReplySender } from './context.js';
-import { createCanonicalAdapter } from './canonical-adapter.js';
 import type {
   Adapter,
   CreatePollingTransport,
@@ -15,12 +14,14 @@ import type {
 } from './contracts.js';
 
 export type ErrorHandler = (err: unknown, ctx: Context) => unknown | Promise<unknown>;
+type AdapterReplyFactory = (ctx: { update: unknown }, text: string, extra?: unknown) => Promise<unknown>;
 
 export interface BotOptions {
   sender?: ReplySender;
   replyHandler?: ReplyHandler;
   replyApi?: ReplyHandler; // alias for replyHandler, structural compatibility
   adapter?: Adapter | BotAdapterLike;
+  createAdapter?: (reply: AdapterReplyFactory) => Adapter;
   adapterConfig?: Record<string, unknown>;
   createPollingTransport?: CreatePollingTransport;
   sdk?: unknown;
@@ -50,6 +51,7 @@ export class Bot {
   #sender?: ReplySender;
   #replyHandler?: ReplyHandler;
   #adapter?: Adapter;
+  #createAdapter?: (reply: AdapterReplyFactory) => Adapter;
   #botAdapter?: BotAdapterLike;
   #adapterConfig?: Record<string, unknown>;
   #createPollingTransport?: CreatePollingTransport;
@@ -60,12 +62,14 @@ export class Bot {
   constructor(options: BotOptions = {}) {
     this.#sender = options.sender;
     this.#replyHandler = options.replyHandler ?? options.replyApi;
+    this.#createAdapter = options.createAdapter;
     this.#adapterConfig = options.adapterConfig ?? {};
 
     const adapterOpt = options.adapter;
     if (adapterOpt && 'createContext' in adapterOpt && 'reply' in adapterOpt) {
       this.#adapter = adapterOpt as Adapter;
-    } else if (adapterOpt && ('createReplyApi' in adapterOpt || 'createPollingController' in adapterOpt)) {
+    }
+    if (adapterOpt && ('createReplyApi' in adapterOpt || 'createPollingController' in adapterOpt)) {
       this.#botAdapter = adapterOpt as BotAdapterLike;
     }
     this.#createPollingTransport = options.createPollingTransport;
@@ -87,6 +91,7 @@ export class Bot {
     if (this.#adapter) return this.#adapter;
 
     if (this.#sender || this.#replyHandler) {
+      if (!this.#createAdapter) return undefined;
       const reply =
         this.#sender
           ? async (ctx: { update: unknown }, text: string, extra?: unknown) =>
@@ -96,17 +101,18 @@ export class Bot {
               if (!target) throw new Error('NotImplemented');
               return await this.#replyHandler!.sendReply(target, text, extra);
             };
-      return createCanonicalAdapter(reply);
+      return this.#createAdapter(reply);
     }
 
     if (this.#botAdapter?.createReplyApi) {
+      if (!this.#createAdapter) return undefined;
       const api = this.#botAdapter.createReplyApi(this.#adapterConfig ?? {});
       const reply = async (ctx: { update: unknown }, text: string, extra?: unknown) => {
         const target = api.getReplyTargetFromUpdate(ctx.update);
         if (!target) throw new Error('NotImplemented');
         return await api.sendReply(target, text, extra);
       };
-      return createCanonicalAdapter(reply);
+      return this.#createAdapter(reply);
     }
 
     return undefined;
@@ -114,7 +120,7 @@ export class Bot {
 
   async handleUpdate(update: unknown): Promise<unknown> {
     const adapter = this.#resolveAdapter();
-    if (!adapter) throw new Error('Adapter required; configure adapter, replyHandler, or sender in BotOptions');
+    if (!adapter) throw new Error('Adapter required; configure adapter or createAdapter in BotOptions');
     const ctx = new Context(update, { adapter });
     try {
       const fn = this.#getComposed();

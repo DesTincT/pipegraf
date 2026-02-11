@@ -34,3 +34,5 @@ export { createWizard } from './scenes/index.js';
 export type { ReplyApi, BotAdapter, PollingConfig } from './adapters/types.js';
 
 export { createMockAdapter } from './adapters/mock/index.js';
+export { createReferenceAdapter } from './adapters/reference-adapter/index.js';
+export type { ReferenceAdapterReply } from './adapters/reference-adapter/index.js';

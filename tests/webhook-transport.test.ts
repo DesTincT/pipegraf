@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCanonicalAdapter } from '../src/core/canonical-adapter.js';
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { Bot } from '../src/core/bot.js';
 
-const testAdapter = createCanonicalAdapter(async () => undefined);
+const testAdapter = createReferenceAdapter(async () => undefined);
 
 describe('webhook transport', () => {
   it('webhookCallback invokes handleUpdate', async () => {

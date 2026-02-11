@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { Bot } from '../src/core/bot.js';
 import { session } from '../src/middleware/session.js';
 
@@ -17,7 +18,7 @@ describe('session middleware', () => {
       count?: number;
     }
 
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(session<S>());
 
     bot.start(async (ctx) => {
@@ -38,7 +39,7 @@ describe('session middleware', () => {
   });
 
   it('different keys are isolated', async () => {
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(session<{ seen?: string }>());
 
     bot.use(async (ctx, next) => {
@@ -69,7 +70,7 @@ describe('session middleware', () => {
   it('middleware order: ctx.session exists only after session middleware', async () => {
     const traces: ('before' | 'after')[] = [];
 
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(async (ctx, next) => {
       if (ctx.session === undefined) traces.push('before');
       await next();
@@ -85,7 +86,7 @@ describe('session middleware', () => {
   });
 
   it('missing key uses fallback and persists across updates', async () => {
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(session<{ n?: number }>({ fallbackKey: 'global' }));
 
     bot.use(async (ctx, next) => {

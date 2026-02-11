@@ -1,7 +1,7 @@
-import type { Adapter, AdapterContext, CommandResult } from './contracts.js';
-import { getNestedRecord, getNumber, isRecord } from '../utils/index.js';
+import type { Adapter, AdapterContext, CommandResult } from '../../core/contracts.js';
+import { getNestedRecord, getNumber, isRecord } from '../../utils/index.js';
 
-export type CanonicalAdapterReply = (ctx: { update: unknown }, text: string, extra?: unknown) => Promise<unknown>;
+export type ReferenceAdapterReply = (ctx: { update: unknown }, text: string, extra?: unknown) => Promise<unknown>;
 
 function getMessage(update: unknown): Record<string, unknown> | undefined {
   return getNestedRecord(update, 'message');
@@ -99,7 +99,7 @@ function getUpdateIdFromUpdate(update: unknown): number | string | undefined {
   return undefined;
 }
 
-export function createCanonicalAdapter(reply: CanonicalAdapterReply): Adapter {
+export function createReferenceAdapter(reply: ReferenceAdapterReply): Adapter {
   return {
     createContext(update: unknown): AdapterContext {
       const messageText = getMessageTextFromUpdate(update);

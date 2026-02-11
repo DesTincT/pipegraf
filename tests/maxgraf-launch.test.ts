@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { Bot } from '../src/core/bot.js';
 import { createMaxAdapter } from '../src/adapters/max/index.js';
 
@@ -7,6 +8,7 @@ describe('Bot.launch / stop', () => {
   it('constructs with sender and can handleUpdate', async () => {
     const bot = new Bot({
       sender: async (_ctx, text) => `sent:${text}`,
+      createAdapter: createReferenceAdapter,
     });
 
     bot.on('text', async (ctx) => {

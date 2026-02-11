@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Message } from '@maxhub/max-bot-api/types';
-import { createCanonicalAdapter } from '../../../src/core/canonical-adapter.js';
+import { createReferenceAdapter } from '../../../src/adapters/reference-adapter/index.js';
 import { Context } from '../../../src/core/context.js';
 import type { ReplyApi } from '../../../src/adapters/types.js';
 
@@ -31,7 +31,7 @@ describe('Context.reply (ReplyApi binding)', () => {
       },
     };
 
-    const adapter = createCanonicalAdapter(async (ctx, text, extra) => {
+    const adapter = createReferenceAdapter(async (ctx, text, extra) => {
       const target = replyApi.getReplyTargetFromUpdate(ctx.update);
       if (!target) throw new Error('NotImplemented');
       return replyApi.sendReply(target, text, extra);
@@ -75,7 +75,7 @@ describe('Context.reply (ReplyApi binding)', () => {
       sendReply: async () => makeMessage(0, ''),
     };
 
-    const adapter = createCanonicalAdapter(async (ctx, text, extra) => {
+    const adapter = createReferenceAdapter(async (ctx, text, extra) => {
       const target = replyApi.getReplyTargetFromUpdate(ctx.update);
       if (!target) throw new Error('NotImplemented');
       return replyApi.sendReply(target, text, extra);

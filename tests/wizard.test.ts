@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { Bot } from '../src/core/bot.js';
 import { session } from '../src/middleware/session.js';
 import { createStage } from '../src/scenes/stage.js';
@@ -29,7 +30,7 @@ describe('wizard (v0.2)', () => {
       ]),
     );
 
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(session());
     bot.use(stage.middleware());
 
@@ -58,7 +59,7 @@ describe('wizard (v0.2)', () => {
       ]),
     );
 
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(session());
     bot.use(stage.middleware());
     bot.start(stage.enter('wiz'));

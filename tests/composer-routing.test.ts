@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCanonicalAdapter } from '../src/core/canonical-adapter.js';
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { compose } from '../src/core/compose.js';
 import { Composer } from '../src/core/composer.js';
 import { Context } from '../src/core/context.js';
 
-const testAdapter = createCanonicalAdapter(async () => undefined);
+const testAdapter = createReferenceAdapter(async () => undefined);
 
 function ctx(update: unknown): Context {
   return new Context(update, { adapter: testAdapter });

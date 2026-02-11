@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { Composer } from '../src/core/composer.js';
 import { Bot } from '../src/core/bot.js';
 import { session } from '../src/middleware/session.js';
@@ -20,7 +21,7 @@ describe('scenes/stage (v0.2)', () => {
     stage.register(createScene('wizard'));
 
     const seen: (string | null)[] = [];
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(session());
     bot.use(stage.middleware());
 
@@ -45,7 +46,7 @@ describe('scenes/stage (v0.2)', () => {
       }),
     );
 
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(session());
     bot.use(stage.middleware());
 
@@ -76,7 +77,7 @@ describe('scenes/stage (v0.2)', () => {
 
     const currents: (string | null)[] = [];
 
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(session());
     bot.use(stage.middleware());
 
@@ -96,7 +97,7 @@ describe('scenes/stage (v0.2)', () => {
     const stage = createStage();
     stage.register(createScene('wizard'));
 
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
     bot.use(stage.middleware());
 
     await expect(bot.handleUpdate(msg('hi'))).rejects.toThrow('Session middleware is required for scenes');

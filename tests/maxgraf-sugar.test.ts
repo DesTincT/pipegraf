@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { Bot } from '../src/core/bot.js';
 
 describe('Bot sugar API', () => {
   it('start/help are aliases for slash commands', async () => {
     const calls: string[] = [];
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
 
     bot.start(async () => {
       calls.push('start');
@@ -29,6 +30,7 @@ describe('Bot sugar API', () => {
       sender: async (_ctx, text, extra2) => {
         calls.push({ text, extra: extra2 });
       },
+      createAdapter: createReferenceAdapter,
     });
 
     bot.use(Bot.reply('hi', extra));
@@ -40,7 +42,7 @@ describe('Bot sugar API', () => {
 
   it('hears/command sugar registers Composer routing without importing Composer', async () => {
     const calls: string[] = [];
-    const bot = new Bot({ sender: async () => undefined });
+    const bot = new Bot({ sender: async () => undefined, createAdapter: createReferenceAdapter });
 
     bot.hears('hi', async () => {
       calls.push('hears');

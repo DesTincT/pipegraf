@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCanonicalAdapter } from '../src/core/canonical-adapter.js';
+import { createReferenceAdapter } from '../src/adapters/reference-adapter/index.js';
 import { Composer } from '../src/core/composer.js';
 import { Bot } from '../src/core/bot.js';
 import { createPollingTransport } from '../src/transports/polling.js';
 
 Bot.createPollingTransport = createPollingTransport;
 
-const testAdapter = createCanonicalAdapter(async () => undefined);
+const testAdapter = createReferenceAdapter(async () => undefined);
 
 describe('polling transport', () => {
   it('processes updates in order and stop() terminates the loop', async () => {

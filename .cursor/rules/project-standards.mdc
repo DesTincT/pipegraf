@@ -1,5 +1,5 @@
 ---
-description: Global project standards (Maxgraf)
+description: Global project standards
 alwaysApply: true
 ---
 
@@ -22,7 +22,7 @@ alwaysApply: true
 - If additional work is needed, stop and wait for the next instruction.
 
 ## Style (B)
-- Classes are allowed ONLY for `Maxgraf` and `Context`.
+- Classes are allowed ONLY for `Bot` and `Context`.
 - All other logic must use pure functions or simple objects.
 - Avoid inheritance; prefer composition.
 
@@ -49,7 +49,7 @@ alwaysApply: true
    - no generic utility grab-bags
    - no configuration objects “for later”
 9) Prefer boring, explicit code over cleverness.
-10) DO NOT USE --trailer in 'git commit' command
+10) DO NOT USE '--trailer' flag in 'git commit' command
 
 ## Testing
 - Every core behavior must be covered by unit tests.
