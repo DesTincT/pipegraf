@@ -1,100 +1,110 @@
-## Bot framework
+## Universal Adapter-Based Bot Framework
 
-A Node.js/TypeScript adapter-based bot framework with a Telegraf-inspired middleware and routing model.
+This project is a Node.js/TypeScript bot framework built around a deterministic middleware runtime and explicit adapters.
 
-## What it is
+## What Problem It Solves
 
-The framework routes incoming updates through a deterministic middleware pipeline, with routing helpers inspired by Telegraf’s DX and programming model.
+Bot applications often accumulate transport-specific logic inside business code. That makes behavior harder to reason about, test, and evolve.
 
-It is **not a fork** of Telegraf.
+This framework separates concerns:
 
-## Why it exists
+- core runtime handles middleware, routing, sessions, scenes, and wizard flow
+- adapters handle transport-specific update parsing and reply delivery
 
-Platform SDKs give you primitives to talk to the messaging platform. In practice, production bots also need a predictable routing model, clear middleware ordering, and explicit error boundaries.
+The result is minimal magic, predictable control flow, and production-friendly behavior.
 
-This framework provides a small, deterministic layer focused on DX and production-oriented defaults, with platform-specific behavior delegated to adapters.
+## Core Concepts
 
-## Features
+### `Bot`
 
-- **Middleware pipeline**: Koa-style `(ctx, next)` middleware composition
-- **Routing helpers**: `bot.on`, `bot.hears`, `bot.command`, `bot.action`
-- **Sugar API**: `bot.start`, `bot.help`, `Bot.reply(...)`
-- **Slash-only command parsing**: commands match `/name` (not `name`)
-- **`ctx.reply()`**: handled by adapter or custom sender
-- **Polling + webhook**: `bot.launch({ polling })` and `bot.webhookCallback()`
-- **TTL-based update deduplication**: in-memory TTL store keyed by stable update identifiers (polling)
-- **Deterministic behavior**: stable middleware order, no hidden concurrency
-- **Error boundary**: `bot.catch((err, ctx) => ...)`
-- **Adapter-based**: platform coupling is isolated in adapter implementations
+Runtime coordinator for middleware composition and update handling.
 
-## Quick start
+- deterministic middleware order
+- explicit error boundary via `bot.catch(...)`
+- routing helpers (`on`, `hears`, `command`, `action`)
 
-This project does not assume npm publishing yet. The snippet below shows usage assuming the package is available in your project.
+### `Context`
+
+Per-update execution object passed through middleware.
+
+- exposes normalized data such as `messageText`, `callbackData`, `command`
+- provides `ctx.reply(...)` delegated to the configured adapter
+- stores state for `session`, `scene`, and `wizard`
+
+### `Adapter`
+
+Boundary between core and transport-specific update/reply behavior.
+
+- creates normalized context from raw updates
+- resolves update identifiers for deduplication
+- implements reply behavior for a target transport
+
+### `Transport`
+
+Delivery mechanism for updates into `bot.handleUpdate(update)`.
+
+- polling and webhook flows are supported
+- transport is independent from bot logic
+
+## Architecture Notes
+
+- Core is **transport-agnostic**.
+- Transport/platform specifics are implemented via **adapters**.
+- Application logic should depend on `Bot`/`Context`, not transport payload structure.
+
+## Minimal Example (Generic Adapter)
 
 ```ts
-import { Bot, createMockAdapter } from 'maxgraf';
+import { Bot } from './dist/core/bot.js';
+import { createReferenceAdapter } from './dist/adapters/reference-adapter/index.js';
 
-const bot = new Bot({
-  adapter: createMockAdapter(),
-  adapterConfig: {},
+const adapter = createReferenceAdapter(async ({ update }, text) => {
+  console.log('[reply]', { text, update });
+  return undefined;
 });
 
-bot.start(async (ctx) => await ctx.reply('Welcome'));
-bot.help(async (ctx) => await ctx.reply('Help: /start /help /hipster'));
-bot.hears('hi', async (ctx) => await ctx.reply('Hey there'));
-bot.command('hipster', Bot.reply('λ'));
+const bot = new Bot({ adapter });
 
-bot.catch(async (err, ctx) => {
-  console.error(err);
-  try {
-    await ctx.reply('Error');
-  } catch {
-    // ignore
-  }
+bot.start(async (ctx) => {
+  await ctx.reply('start command received');
 });
 
-await bot.launch({ polling: { intervalMs: 250, dedupeTtlMs: 60_000 } });
+bot.action('confirm:yes', async (ctx) => {
+  await ctx.reply('callback confirmed');
+});
 
-process.once('SIGINT', () => void bot.stop());
-process.once('SIGTERM', () => void bot.stop());
+await bot.handleUpdate({ update_id: 1, chat_id: 1, user_id: 1, message: { text: '/start' } });
+await bot.handleUpdate({ update_id: 2, chat_id: 1, user_id: 1, callback_query: { payload: 'confirm:yes' } });
 ```
 
-Platform-specific adapters (inline keyboards, etc.) are available via subpath exports. See the examples and adapter documentation.
+## Sessions / Scenes / Wizard Overview
 
-## Feature comparison
+### Sessions
 
-| Capability                           | Telegraf.js | This framework |
-| ------------------------------------ | ----------- | -------------- |
-| Telegraf-like DX                     | ✅          | ✅             |
-| Middleware pipeline                  | ✅          | ✅             |
-| Sugar API (start/help/hears/command) | ✅          | ✅             |
-| Slash command handling               | ✅          | ✅             |
-| `ctx.reply`                          | ✅          | ✅             |
-| `ctx.command` / `ctx.args`           | ✅          | ⚠️             |
-| Session support                      | ✅          | ✅             |
-| Scenes / dialogs                     | ✅          | ✅             |
-| Wizard flows                         | ✅          | ✅             |
-| Testing helpers                      | ✅          | ⚠️             |
-| Update deduplication (TTL)           | ⚠️          | ✅             |
-| Deterministic behavior               | ⚠️          | ✅             |
-| Platform coupling                    | Telegram    | Adapter-based  |
+`session()` attaches per-key mutable state to `ctx.session` for cross-update workflows.
 
-Legend: ✅ supported, ⚠️ partial / minimal, ❌ not supported.
+### Scenes
 
-## Runtime guarantees
+`createStage()` + `createScene()` provide named flow partitions with explicit enter/leave control.
 
-- **Stable middleware order**: middleware runs in registration order; wrapping behavior is deterministic.
-- **TTL-based deduplication (polling)**: repeated updates are ignored within TTL (in-memory).
-- **Isolated error handling**: errors bubble by default; `bot.catch` provides a single explicit boundary.
-- **No hidden concurrency**: no background task orchestration beyond what you explicitly start.
+### Wizard
 
-## Project status
+`createWizard(name, steps)` provides step-based interaction with deterministic progression (`next`, `back`, `selectStep`).
 
-The framework is **v0.x**. The API may change while the focus is stabilizing core DX and runtime behavior.
+## Runtime Characteristics
+
+- deterministic middleware pipeline
+- explicit adapter-based transport integration
+- in-memory deduplication support for polling transports
+- no hidden background orchestration beyond configured transport loops
+
+## Project Status
+
+Current API is stable enough for iterative production use, with ongoing focus on runtime clarity and explicit contracts.
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). This project follows an issues-first workflow (discuss in an issue, then open a focused PR).
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License
 

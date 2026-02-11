@@ -1,7 +1,12 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts', 'src/adapters/max/index.ts', 'src/adapters/mock/index.ts'],
+  entry: [
+    'src/index.ts',
+    'src/adapters/max/index.ts',
+    'src/adapters/mock/index.ts',
+    'src/adapters/reference-adapter/index.ts',
+  ],
   format: ['esm', 'cjs'],
   target: 'es2022',
   dts: true,
