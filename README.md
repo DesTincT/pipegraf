@@ -1,4 +1,4 @@
-## Universal Adapter-Based Bot Framework
+## Pipegraf
 
 This project is a Node.js/TypeScript bot framework built around a deterministic middleware runtime and explicit adapters.
 

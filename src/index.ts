@@ -12,7 +12,7 @@ import { createPollingTransport } from './transports/polling.js';
 
 Bot.createPollingTransport = createPollingTransport;
 
-export { Bot };
+export { Bot, Bot as Pipegraf, Bot as Maxgraf };
 export type { ErrorHandler, BotOptions, LaunchOptions } from './core/bot.js';
 
 export { createPollingController, createPollingTransport } from './transports/polling.js';

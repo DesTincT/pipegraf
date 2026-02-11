@@ -1,17 +1,25 @@
 {
-  "name": "maxgraf",
+  "name": "pipegraf",
   "version": "0.9.1",
-  "description": "Adapter-based Node.js/TypeScript bot framework.",
+  "description": "Transport-agnostic adapter-based bot framework for Node.js and TypeScript.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DesTincT/maxgrafjs.git"
+    "url": "git+https://github.com/DesTincT/pipegraf.git"
   },
+  "bugs": {
+    "url": "https://github.com/DesTincT/pipegraf/issues"
+  },
+  "homepage": "https://github.com/DesTincT/pipegraf#readme",
   "keywords": [
     "bot",
     "framework",
     "nodejs",
-    "telegraf-inspired"
+    "typescript",
+    "middleware",
+    "adapter",
+    "transport-agnostic",
+    "deterministic"
   ],
   "type": "module",
   "files": [

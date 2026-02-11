@@ -10,7 +10,7 @@ Wizard state is stored in `ctx.session`, so it requires:
 ## Minimal example
 
 ```ts
-import { Bot, createStage, createWizard, session } from 'maxgraf';
+import { Bot, createStage, createWizard, session } from 'pipegraf';
 
 const stage = createStage();
 stage.register(

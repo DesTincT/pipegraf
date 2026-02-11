@@ -7,7 +7,7 @@ This is intended for local development and simple deployments. The default store
 ## Usage
 
 ```ts
-import { Bot, session } from 'maxgraf';
+import { Bot, session } from 'pipegraf';
 
 type Session = { count?: number };
 

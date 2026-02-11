@@ -7,7 +7,7 @@ Scene state is stored in `ctx.session`, so `session()` middleware is required.
 ## Usage
 
 ```ts
-import { Bot, createScene, createStage, session } from 'maxgraf';
+import { Bot, createScene, createStage, session } from 'pipegraf';
 
 const stage = createStage();
 
