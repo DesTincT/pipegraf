@@ -92,15 +92,14 @@ export class Bot {
 
     if (this.#sender || this.#replyHandler) {
       if (!this.#createAdapter) return undefined;
-      const reply =
-        this.#sender
-          ? async (ctx: { update: unknown }, text: string, extra?: unknown) =>
-              Promise.resolve(this.#sender!(ctx as Context, text, extra))
-          : async (ctx: { update: unknown }, text: string, extra?: unknown) => {
-              const target = this.#replyHandler!.getReplyTargetFromUpdate(ctx.update);
-              if (!target) throw new Error('NotImplemented');
-              return await this.#replyHandler!.sendReply(target, text, extra);
-            };
+      const reply = this.#sender
+        ? async (ctx: { update: unknown }, text: string, extra?: unknown) =>
+            Promise.resolve(this.#sender!(ctx as Context, text, extra))
+        : async (ctx: { update: unknown }, text: string, extra?: unknown) => {
+            const target = this.#replyHandler!.getReplyTargetFromUpdate(ctx.update);
+            if (!target) throw new Error('NotImplemented');
+            return await this.#replyHandler!.sendReply(target, text, extra);
+          };
       return this.#createAdapter(reply);
     }
 
@@ -136,7 +135,9 @@ export class Bot {
   startPolling(options: PollingTransportOptions): PollingTransport {
     const fn = this.#createPollingTransport ?? (this.constructor as typeof Bot).createPollingTransport;
     if (!fn) {
-      throw new Error('createPollingTransport is required for startPolling; pass it in BotOptions or set Bot.createPollingTransport');
+      throw new Error(
+        'createPollingTransport is required for startPolling; pass it in BotOptions or set Bot.createPollingTransport',
+      );
     }
     const adapter = this.#resolveAdapter();
     const mergedOptions: PollingTransportOptions =

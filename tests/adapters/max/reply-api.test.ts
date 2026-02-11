@@ -20,7 +20,12 @@ describe('Context.reply (ReplyApi binding)', () => {
 
     const replyApi: ReplyApi = {
       getReplyTargetFromUpdate: (update) => {
-        if (update && typeof update === 'object' && 'chat_id' in update && typeof (update as { chat_id: number }).chat_id === 'number') {
+        if (
+          update &&
+          typeof update === 'object' &&
+          'chat_id' in update &&
+          typeof (update as { chat_id: number }).chat_id === 'number'
+        ) {
           return { chatId: (update as { chat_id: number }).chat_id };
         }
         return undefined;
@@ -36,10 +41,7 @@ describe('Context.reply (ReplyApi binding)', () => {
       if (!target) throw new Error('NotImplemented');
       return replyApi.sendReply(target, text, extra);
     });
-    const ctx = new Context(
-      { update_type: 'bot_started', timestamp: 0, chat_id: 123 },
-      { adapter },
-    );
+    const ctx = new Context({ update_type: 'bot_started', timestamp: 0, chat_id: 123 }, { adapter });
     await ctx.reply('hi', {
       attachments: [
         {

@@ -7,7 +7,12 @@ import { createReferenceAdapter } from '../reference-adapter/index.js';
 function createMockReplyApi(): ReplyApi {
   return {
     getReplyTargetFromUpdate(update: unknown): ReplyTarget | undefined {
-      if (update && typeof update === 'object' && 'chat_id' in update && typeof (update as { chat_id: unknown }).chat_id === 'number') {
+      if (
+        update &&
+        typeof update === 'object' &&
+        'chat_id' in update &&
+        typeof (update as { chat_id: unknown }).chat_id === 'number'
+      ) {
         return { chatId: (update as { chat_id: number }).chat_id };
       }
       return { chatId: 1 };
@@ -44,7 +49,8 @@ export function createMockAdapter(): BotAdapter & Adapter {
         getUpdates: async ({ offset, signal }) => {
           if (signal.aborted) return [];
           if (offset !== undefined) {
-            while (cursor < updates.length && (updates[cursor] as { update_id: number })?.update_id < offset) cursor += 1;
+            while (cursor < updates.length && (updates[cursor] as { update_id: number })?.update_id < offset)
+              cursor += 1;
           }
           const batch = cursor < updates.length ? [updates[cursor]] : [];
           cursor += batch.length;

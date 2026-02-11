@@ -29,15 +29,11 @@ export class Context {
     selectStep: (n: number) => Promise<void>;
   };
 
-  readonly #sender?: ReplySender;
-  readonly #replyHandler?: ReplyHandler;
   readonly #adapter?: Adapter;
   readonly #base?: AdapterContext;
 
   constructor(update: unknown, options: ContextOptions = {}) {
     this.update = update;
-    this.#sender = options.sender;
-    this.#replyHandler = options.replyHandler ?? options.replyApi;
     this.#adapter = options.adapter;
 
     if (this.#adapter) {

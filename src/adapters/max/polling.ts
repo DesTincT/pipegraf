@@ -165,6 +165,10 @@ export function createMaxPollingController(
     },
   });
 
-  const replyApi = createMaxReplyApi(api as unknown as { sendMessageToChat: (chatId: number, text: string, extra?: Record<string, unknown>) => Promise<unknown> });
+  const replyApi = createMaxReplyApi(
+    api as unknown as {
+      sendMessageToChat: (chatId: number, text: string, extra?: Record<string, unknown>) => Promise<unknown>;
+    },
+  );
   return { controller, api: replyApi };
 }

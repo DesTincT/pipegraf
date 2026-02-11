@@ -7,9 +7,7 @@ const bot = new Bot({
 
 bot.use(async (ctx, next) => {
   const updateType =
-    ctx.update && typeof ctx.update === 'object' && 'update_type' in ctx.update
-      ? ctx.update.update_type
-      : 'unknown';
+    ctx.update && typeof ctx.update === 'object' && 'update_type' in ctx.update ? ctx.update.update_type : 'unknown';
   const text = ctx.messageText;
   const callback = ctx.callbackData;
   console.log(
