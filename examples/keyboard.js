@@ -1,13 +1,55 @@
-import { Bot, createMockAdapter } from '../dist/index.js';
+import { Bot } from '../dist/core/bot.js';
+import { createReferenceAdapter } from '../dist/adapters/reference-adapter/index.js';
+import { session } from '../dist/middleware/session.js';
+import { createStage } from '../dist/scenes/stage.js';
+import { createWizard } from '../dist/scenes/wizard.js';
 
-const bot = new Bot({
-  adapter: createMockAdapter(),
-  adapterConfig: {},
+const adapter = createReferenceAdapter(async ({ update }, text) => {
+  console.log('[adapter.reply]', { text, update });
+  return undefined;
 });
 
-bot.start((ctx) => ctx.reply('Welcome! Use buttons below.'));
-bot.action('menu:help', (ctx) => ctx.reply('This is the help screen.'));
-bot.action('like', (ctx) => ctx.reply('Thanks!'));
-bot.action('dislike', (ctx) => ctx.reply('Noted'));
+const bot = new Bot({ adapter });
+const stage = createStage();
 
-await bot.launch({ polling: { intervalMs: 250, dedupeTtlMs: 60_000 } });
+stage.register(
+  createWizard('flow', [
+    async (ctx) => {
+      await ctx.reply('wizard step 1: send a message');
+      await ctx.wizard?.next();
+    },
+    async (ctx) => {
+      if (ctx.messageText !== undefined) {
+        ctx.session ??= {};
+        ctx.session['wizard_input'] = ctx.messageText;
+        await ctx.reply('wizard step 2: confirm with callback confirm:yes or confirm:no');
+        await ctx.wizard?.next();
+        return;
+      }
+      await ctx.reply('wizard step 2: waiting for a message');
+    },
+    async (_ctx, next) => await next(),
+  ]),
+);
+
+bot.use(session());
+bot.use(stage.middleware());
+
+bot.start(stage.enter('flow'), async (ctx) => {
+  await ctx.reply('start command received');
+});
+
+bot.action('confirm:yes', async (ctx) => {
+  const input = String(ctx.session?.['wizard_input'] ?? '');
+  await ctx.reply(`callback confirmed: yes (${input})`);
+  await ctx.scene?.leave();
+});
+
+bot.action('confirm:no', async (ctx) => {
+  await ctx.reply('callback confirmed: no');
+  await ctx.scene?.leave();
+});
+
+await bot.handleUpdate({ update_id: 1, chat_id: 1, user_id: 1, message: { text: '/start' } });
+await bot.handleUpdate({ update_id: 2, chat_id: 1, user_id: 1, message: { text: 'sample input' } });
+await bot.handleUpdate({ update_id: 3, chat_id: 1, user_id: 1, callback_query: { payload: 'confirm:yes' } });

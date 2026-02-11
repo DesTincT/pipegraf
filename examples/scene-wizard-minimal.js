@@ -1,53 +1,61 @@
-import { Bot, Composer, createScene, createStage, session } from '../dist/index.js';
+import { Bot } from '../dist/core/bot.js';
+import { Composer } from '../dist/core/composer.js';
+import { createReferenceAdapter } from '../dist/adapters/reference-adapter/index.js';
+import { session } from '../dist/middleware/session.js';
+import { createStage } from '../dist/scenes/stage.js';
+import { createWizard } from '../dist/scenes/wizard.js';
 
 function msg(text, chatId = 1, userId = 1) {
   return { message: { text }, chat_id: chatId, user_id: userId };
 }
 
+const adapter = createReferenceAdapter(async ({ update }, text) => {
+  console.log('[adapter.reply]', { text, update });
+  return undefined;
+});
+
+const bot = new Bot({ adapter });
 const stage = createStage();
 
 stage.register(
-  createScene('wizard', async (ctx, next) => {
-    const s = ctx.session ?? {};
-    const step = typeof s['wizard_step'] === 'number' ? s['wizard_step'] : 0;
-
-    if (step === 0) {
-      s['wizard_step'] = 1;
-      await ctx.reply('Step 1: say "ok"');
-      return;
-    }
-
-    if (step === 1) {
-      if (ctx.messageText === 'ok') {
-        s['wizard_step'] = 2;
-        await ctx.reply('Step 2: done. Leaving scene.');
-        await ctx.scene?.leave();
-        return await next();
+  createWizard('flow', [
+    async (ctx) => {
+      await ctx.reply('wizard step 1: send a message');
+      await ctx.wizard?.next();
+    },
+    async (ctx) => {
+      if (ctx.messageText !== undefined) {
+        ctx.session ??= {};
+        ctx.session['wizard_input'] = ctx.messageText;
+        await ctx.reply('wizard step 2: confirm with callback confirm:yes or confirm:no');
+        await ctx.wizard?.next();
+        return;
       }
-      await ctx.reply('Expected "ok"');
-      return;
-    }
-
-    return await next();
-  }),
+      await ctx.reply('wizard step 2: waiting for a message');
+    },
+    async (_ctx, next) => await next(),
+  ]),
 );
-
-const bot = new Bot({
-  sender: async (_ctx, text) => console.log(`reply: ${text}`),
-});
 
 bot.use(session());
 bot.use(stage.middleware());
-
-bot.start(stage.enter('wizard'));
-bot.use(Composer.command('leave', stage.leave()));
-
-bot.use(async (ctx) => {
-  console.log('[update]', ctx.scene?.current, ctx.messageText);
+bot.start(stage.enter('flow'), async (ctx) => {
+  await ctx.reply('start command received');
 });
 
-// Local simulation (no network)
+bot.action('confirm:yes', async (ctx) => {
+  const input = String(ctx.session?.['wizard_input'] ?? '');
+  await ctx.reply(`callback confirmed: yes (${input})`);
+  await ctx.scene?.leave();
+});
+
+bot.action('confirm:no', async (ctx) => {
+  await ctx.reply('callback confirmed: no');
+  await ctx.scene?.leave();
+});
+
+bot.use(Composer.command('leave', stage.leave()));
+
 await bot.handleUpdate(msg('/start'));
-await bot.handleUpdate(msg('nope'));
-await bot.handleUpdate(msg('ok'));
-await bot.handleUpdate(msg('after'));
+await bot.handleUpdate(msg('sample input'));
+await bot.handleUpdate({ callback_query: { payload: 'confirm:yes' }, chat_id: 1, user_id: 1 });
