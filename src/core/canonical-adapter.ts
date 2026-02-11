@@ -70,6 +70,27 @@ function getChatIdFromUpdate(update: unknown): number | undefined {
   return getNumber(chatId);
 }
 
+function getUserIdFromUpdate(update: unknown): number | undefined {
+  if (!isRecord(update)) return undefined;
+
+  const direct = getNumber(update['user_id']);
+  if (direct !== undefined) return direct;
+
+  const user = update['user'];
+  if (isRecord(user)) {
+    const fromUser = getNumber(user['user_id']);
+    if (fromUser !== undefined) return fromUser;
+  }
+
+  const message = getMessage(update);
+  if (!isRecord(message)) return undefined;
+
+  const sender = message['sender'];
+  if (!isRecord(sender)) return undefined;
+
+  return getNumber(sender['user_id']);
+}
+
 function getUpdateIdFromUpdate(update: unknown): number | string | undefined {
   if (!isRecord(update)) return undefined;
   const value = update['update_id'];
@@ -85,6 +106,7 @@ export function createCanonicalAdapter(reply: CanonicalAdapterReply): Adapter {
       const callbackData = getCallbackDataFromUpdate(update);
       const command = getCommandFromUpdate(update);
       const chatId = getChatIdFromUpdate(update);
+      const userId = getUserIdFromUpdate(update);
 
       return {
         update,
@@ -92,6 +114,7 @@ export function createCanonicalAdapter(reply: CanonicalAdapterReply): Adapter {
         callbackData,
         command,
         chatId,
+        userId,
         message: getMessage(update),
         callbackQuery: getCallbackQuery(update),
         inlineQuery: getInlineQuery(update),
@@ -107,5 +130,6 @@ export function createCanonicalAdapter(reply: CanonicalAdapterReply): Adapter {
     getCommand: getCommandFromUpdate,
     getCallbackData: getCallbackDataFromUpdate,
     getChatId: getChatIdFromUpdate,
+    getUserId: getUserIdFromUpdate,
   };
 }

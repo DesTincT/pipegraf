@@ -1,8 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
+import { createCanonicalAdapter } from '../src/core/canonical-adapter.js';
 import { compose } from '../src/core/compose.js';
 import { Composer } from '../src/core/composer.js';
 import { Context } from '../src/core/context.js';
+
+const testAdapter = createCanonicalAdapter(async () => undefined);
+
+function ctx(update: unknown): Context {
+  return new Context(update, { adapter: testAdapter });
+}
 
 describe('Composer routing', () => {
   it('on(text) runs only for message with text', async () => {
@@ -17,15 +24,15 @@ describe('Composer routing', () => {
       },
     ]);
 
-    await fn(new Context({ message: { text: 'hi' } }));
-    await fn(new Context({ message: { caption: 'nope' } }));
+    await fn(ctx({ message: { text: 'hi' } }));
+    await fn(ctx({ message: { caption: 'nope' } }));
 
     expect(calls).toEqual(['text', 'fallback']);
   });
 
   it('hears matches string and sets ctx.match', async () => {
     const calls: string[] = [];
-    const ctx = new Context({ message: { text: 'hi' } });
+    const ctx1 = ctx({ message: { text: 'hi' } });
 
     const fn = compose<Context>([
       Composer.hears('hi', async (ctx2) => {
@@ -37,13 +44,13 @@ describe('Composer routing', () => {
       },
     ]);
 
-    await fn(ctx);
+    await fn(ctx1);
 
     expect(calls).toEqual(['hit']);
   });
 
   it('hears matches regex and sets ctx.match', async () => {
-    const ctx = new Context({ message: { text: 'hello world' } });
+    const ctx1 = ctx({ message: { text: 'hello world' } });
 
     const fn = compose<Context>([
       Composer.hears(/^hello (.+)$/, async (ctx2) => {
@@ -51,11 +58,11 @@ describe('Composer routing', () => {
       }),
     ]);
 
-    await fn(ctx);
+    await fn(ctx1);
   });
 
   it('action matches callback query payload and sets ctx.match', async () => {
-    const ctx = new Context({ callback_query: { payload: 'ok:1' } });
+    const ctx1 = ctx({ callback_query: { payload: 'ok:1' } });
     const calls: string[] = [];
 
     const fn = compose<Context>([
@@ -68,12 +75,12 @@ describe('Composer routing', () => {
       },
     ]);
 
-    await fn(ctx);
+    await fn(ctx1);
     expect(calls).toEqual(['hit']);
   });
 
   it('command matches only with leading slash and sets ctx.command + ctx.payload', async () => {
-    const ctx = new Context({
+    const ctx1 = ctx({
       message: {
         text: '/start hello',
       },
@@ -86,7 +93,7 @@ describe('Composer routing', () => {
       }),
     ]);
 
-    await fn(ctx);
+    await fn(ctx1);
   });
 
   it('command does not match without leading slash', async () => {
@@ -101,7 +108,7 @@ describe('Composer routing', () => {
       },
     ]);
 
-    await fn(new Context({ message: { text: 'start hello' } }));
+    await fn(ctx({ message: { text: 'start hello' } }));
 
     expect(calls).toEqual(['fallback']);
   });

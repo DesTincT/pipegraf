@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { createCanonicalAdapter } from '../src/core/canonical-adapter.js';
 import { Bot } from '../src/core/bot.js';
+
+const testAdapter = createCanonicalAdapter(async () => undefined);
 
 describe('webhook transport', () => {
   it('webhookCallback invokes handleUpdate', async () => {
-    const bot = new Bot();
+    const bot = new Bot({ adapter: testAdapter });
     const calls: unknown[] = [];
 
     bot.use(async (ctx) => {
@@ -18,7 +21,7 @@ describe('webhook transport', () => {
   });
 
   it('webhookCallback calls onError when handleUpdate throws', async () => {
-    const bot = new Bot();
+    const bot = new Bot({ adapter: testAdapter });
     bot.use(async () => {
       throw new Error('boom');
     });

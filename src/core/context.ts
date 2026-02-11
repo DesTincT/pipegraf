@@ -1,6 +1,5 @@
 import type { Adapter, AdapterContext } from './contracts.js';
 import type { ReplyHandler } from './contracts.js';
-import { getNestedRecord, isRecord } from '../utils/index.js';
 
 export type ReplySender = (ctx: Context, text: string, extra?: unknown) => Promise<unknown> | unknown;
 
@@ -49,47 +48,31 @@ export class Context {
   }
 
   get message(): Record<string, unknown> | undefined {
-    if (this.#base) return this.#base.message;
-    return getNestedRecord(this.update, 'message');
+    return this.#base?.message;
   }
 
   get callbackQuery(): Record<string, unknown> | undefined {
-    if (this.#base) return this.#base.callbackQuery;
-    return getNestedRecord(this.update, 'callback_query');
+    return this.#base?.callbackQuery;
   }
 
   get inlineQuery(): Record<string, unknown> | undefined {
-    if (this.#base) return this.#base.inlineQuery;
-    return getNestedRecord(this.update, 'inline_query');
+    return this.#base?.inlineQuery;
   }
 
   get messageText(): string | undefined {
-    if (this.#base) return this.#base.messageText;
-    const msg = this.message;
-    if (!msg) return undefined;
-    const text = msg['text'];
-    return typeof text === 'string' ? text : undefined;
+    return this.#base?.messageText;
   }
 
   get callbackData(): string | undefined {
-    if (this.#base) return this.#base.callbackData;
-    const cq = this.callbackQuery;
-    if (!cq) return undefined;
-
-    const payload = cq['payload'];
-    if (typeof payload === 'string') return payload;
-    if (isRecord(payload)) {
-      const action = payload['action'];
-      if (typeof action === 'string') return action;
-    }
-
-    const data = cq['data'];
-    return typeof data === 'string' ? data : undefined;
+    return this.#base?.callbackData;
   }
 
   get chatId(): number | undefined {
-    if (this.#base) return this.#base.chatId;
-    return undefined;
+    return this.#base?.chatId;
+  }
+
+  get userId(): number | undefined {
+    return this.#base?.userId;
   }
 
   get eventType(): 'text' | 'message' | 'callback_query' | 'inline_query' | 'unknown' {
@@ -101,20 +84,7 @@ export class Context {
   }
 
   async reply(text: string, extra?: unknown): Promise<unknown> {
-    if (this.#adapter) {
-      return await this.#adapter.reply(this, text, extra);
-    }
-
-    if (this.#sender) {
-      return await Promise.resolve(this.#sender(this, text, extra));
-    }
-
-    if (this.#replyHandler) {
-      const target = this.#replyHandler.getReplyTargetFromUpdate(this.update);
-      if (!target) throw new Error('NotImplemented');
-      return await this.#replyHandler.sendReply(target, text, extra);
-    }
-
-    throw new Error('NotImplemented');
+    if (!this.#adapter) throw new Error('NotImplemented');
+    return await this.#adapter.reply(this, text, extra);
   }
 }

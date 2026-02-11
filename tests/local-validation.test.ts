@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createCanonicalAdapter } from '../src/core/canonical-adapter.js';
 import { Composer } from '../src/core/composer.js';
 import { Bot } from '../src/core/bot.js';
 
@@ -76,7 +77,8 @@ describe('local validation (v0.1)', () => {
 
     // 3) Middleware order (global wraps handlers deterministically)
     const startTrace: string[] = [];
-    const orderBot = new Bot();
+    const orderAdapter = createCanonicalAdapter(async () => undefined);
+    const orderBot = new Bot({ adapter: orderAdapter });
     orderBot.use(async (_ctx, next) => {
       startTrace.push('global:before');
       await next();
@@ -89,7 +91,8 @@ describe('local validation (v0.1)', () => {
     expect(startTrace).toEqual(['global:before', 'start', 'global:after']);
 
     // 4) Error handling
-    const errorBot = new Bot();
+    const errorAdapter = createCanonicalAdapter(async () => undefined);
+    const errorBot = new Bot({ adapter: errorAdapter });
     let errorCaught = 0;
     errorBot.catch(() => {
       errorCaught += 1;

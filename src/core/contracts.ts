@@ -18,6 +18,7 @@ export interface AdapterContext {
   readonly callbackData: string | undefined;
   readonly command: CommandResult | undefined;
   readonly chatId: number | undefined;
+  readonly userId: number | undefined;
   message?: Record<string, unknown>;
   callbackQuery?: Record<string, unknown>;
   inlineQuery?: Record<string, unknown>;
@@ -31,6 +32,7 @@ export interface Adapter {
   getCommand(update: unknown): CommandResult | undefined;
   getCallbackData(update: unknown): string | undefined;
   getChatId(update: unknown): number | undefined;
+  getUserId(update: unknown): number | undefined;
 }
 
 export type OnUpdate = (update: unknown) => Promise<unknown>;

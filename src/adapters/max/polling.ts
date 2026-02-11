@@ -75,11 +75,20 @@ function normalizeMaxUpdate(raw: unknown): unknown {
       return typeof payload === 'string' ? payload : undefined;
     })() ?? undefined;
 
+  const userId =
+    getNumber(raw['user_id']) ??
+    (() => {
+      const msg = getNestedRecord(raw, 'message');
+      const sender = msg ? getNestedRecord(msg, 'sender') : undefined;
+      return sender ? getNumber(sender['user_id']) : undefined;
+    })();
+
   const normalized: Record<string, unknown> = {
     ...(updateId === undefined ? {} : { update_id: updateId }),
     ...(updateType === undefined ? {} : { update_type: updateType }),
     ...(timestamp === undefined ? {} : { timestamp }),
     ...(chatId === undefined ? {} : { chat_id: chatId }),
+    ...(userId === undefined ? {} : { user_id: userId }),
     ...(callbackId === undefined ? {} : { callback_id: callbackId }),
     ...(messageId === undefined ? {} : { message_id: messageId }),
     ...(messageText === undefined
@@ -88,6 +97,7 @@ function normalizeMaxUpdate(raw: unknown): unknown {
           message: {
             text: messageText,
             recipient: { chat_id: chatId },
+            ...(userId === undefined ? {} : { sender: { user_id: userId } }),
           },
         }),
     ...(callbackData === undefined ? {} : { callback_query: { payload: callbackData } }),
@@ -122,6 +132,11 @@ export function createMaxPollingController(
     dedupe: {
       ttlMs: options.dedupeTtlMs,
       maxSize: options.dedupeMaxSize as number | undefined,
+      getUpdateId: (update) => {
+        if (!isRecord(update)) return undefined;
+        const v = update['update_id'];
+        return typeof v === 'number' ? v : undefined;
+      },
       getKey: (update) => {
         if (!isRecord(update)) return undefined;
         const messageId2 = update['message_id'];

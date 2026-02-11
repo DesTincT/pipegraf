@@ -114,6 +114,7 @@ export class Bot {
 
   async handleUpdate(update: unknown): Promise<unknown> {
     const adapter = this.#resolveAdapter();
+    if (!adapter) throw new Error('Adapter required; configure adapter, replyHandler, or sender in BotOptions');
     const ctx = new Context(update, { adapter });
     try {
       const fn = this.#getComposed();
@@ -131,7 +132,22 @@ export class Bot {
     if (!fn) {
       throw new Error('createPollingTransport is required for startPolling; pass it in BotOptions or set Bot.createPollingTransport');
     }
-    const transport = fn(options);
+    const adapter = this.#resolveAdapter();
+    const mergedOptions: PollingTransportOptions =
+      adapter !== undefined
+        ? {
+            ...options,
+            dedupe: {
+              ...options.dedupe,
+              getUpdateId: (u) => {
+                const id = adapter.getUpdateId(u);
+                return typeof id === 'number' ? id : undefined;
+              },
+              getKey: options.dedupe?.getKey ?? ((u) => adapter.getUpdateId(u)),
+            },
+          }
+        : options;
+    const transport = fn(mergedOptions);
     transport.start((update) => this.handleUpdate(update));
     return transport;
   }

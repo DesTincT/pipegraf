@@ -1,5 +1,4 @@
 import type { OnUpdate, Transport } from '../core/contracts.js';
-import { isRecord } from '../utils/index.js';
 
 export type PollingGetUpdates = (params: { offset?: number; signal: AbortSignal }) => Promise<readonly unknown[]>;
 
@@ -16,12 +15,6 @@ export interface PollingOptions {
 
 export interface PollingController extends Transport {
   isRunning(): boolean;
-}
-
-function defaultGetUpdateId(update: unknown): number | undefined {
-  if (!isRecord(update)) return undefined;
-  const value = update['update_id'];
-  return typeof value === 'number' ? value : undefined;
 }
 
 function defaultGetKey(
@@ -67,7 +60,7 @@ function cleanupDedupeStore(store: Map<string | number, number>, now: number, ma
 
 export function createPollingTransport(options: PollingOptions): PollingController {
   const intervalMs = options.intervalMs ?? 250;
-  const getUpdateId = options.dedupe?.getUpdateId ?? defaultGetUpdateId;
+  const getUpdateId = options.dedupe?.getUpdateId ?? (() => undefined);
   const getKey = options.dedupe?.getKey ?? ((u) => defaultGetKey(u, getUpdateId));
   const ttlMs = options.dedupe?.ttlMs ?? 60_000;
   const maxSize = options.dedupe?.maxSize ?? 1_000;

@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
+import { createCanonicalAdapter } from '../src/core/canonical-adapter.js';
 import { Composer } from '../src/core/composer.js';
 import { Bot } from '../src/core/bot.js';
 import { createPollingTransport } from '../src/transports/polling.js';
 
 Bot.createPollingTransport = createPollingTransport;
 
+const testAdapter = createCanonicalAdapter(async () => undefined);
+
 describe('polling transport', () => {
   it('processes updates in order and stop() terminates the loop', async () => {
     const calls: string[] = [];
-    const bot = new Bot();
+    const bot = new Bot({ adapter: testAdapter });
 
     let resolveProcessed: (() => void) | undefined;
     const processed = new Promise<void>((resolve) => {
@@ -52,7 +55,7 @@ describe('polling transport', () => {
   });
 
   it('advances offset based on update_id', async () => {
-    const bot = new Bot();
+    const bot = new Bot({ adapter: testAdapter });
     const offsets: (number | undefined)[] = [];
 
     const updates = [
@@ -91,7 +94,7 @@ describe('polling transport', () => {
 
   it('dedupes repeated update_id within TTL', async () => {
     const calls: string[] = [];
-    const bot = new Bot();
+    const bot = new Bot({ adapter: testAdapter });
 
     bot.use(
       Composer.on('text', async (ctx) => {
@@ -120,7 +123,7 @@ describe('polling transport', () => {
 
   it('expires dedupe entries after TTL', async () => {
     const calls: string[] = [];
-    const bot = new Bot();
+    const bot = new Bot({ adapter: testAdapter });
 
     bot.use(
       Composer.on('text', async (ctx) => {
@@ -155,7 +158,7 @@ describe('polling transport', () => {
 
   it('dedupes using dedupe.getKey when update_id is missing', async () => {
     const calls: string[] = [];
-    const bot = new Bot();
+    const bot = new Bot({ adapter: testAdapter });
 
     bot.use(
       Composer.on('text', async (ctx) => {
