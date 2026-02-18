@@ -55,26 +55,24 @@ Delivery mechanism for updates into `bot.handleUpdate(update)`.
 ## Minimal Example (Generic Adapter)
 
 ```ts
-import { Bot } from './dist/core/bot.js';
-import { createReferenceAdapter } from './dist/adapters/reference-adapter/index.js';
+/**
+ * Quickstart (Telegram):
+ * 1) Set TELEGRAM_BOT_TOKEN (from @BotFather)
+ * 2) Run: npx tsx examples/quickstart-telegram.ts
+ */
 
-const adapter = createReferenceAdapter(async ({ update }, text) => {
-  console.log('[reply]', { text, update });
-  return undefined;
-});
+import { Bot } from 'pipegraf';
+import { createTelegramAdapter } from 'pipegraf/adapters/telegram';
 
-const bot = new Bot({ adapter });
+const token = process.env.TELEGRAM_BOT_TOKEN;
+if (!token) throw new Error('TELEGRAM_BOT_TOKEN is required');
 
-bot.start(async (ctx) => {
-  await ctx.reply('start command received');
-});
+const bot = new Bot({ adapter: createTelegramAdapter({ token }) });
+bot.command('start', (ctx) => ctx.reply('Hello!'));
+bot.on('message', (ctx) => ctx.reply('Got it.'));
+await bot.launch({ polling: {} });
+console.log('Bot started (Telegram).');
 
-bot.action('confirm:yes', async (ctx) => {
-  await ctx.reply('callback confirmed');
-});
-
-await bot.handleUpdate({ update_id: 1, chat_id: 1, user_id: 1, message: { text: '/start' } });
-await bot.handleUpdate({ update_id: 2, chat_id: 1, user_id: 1, callback_query: { payload: 'confirm:yes' } });
 ```
 
 ## Sessions / Scenes / Wizard Overview
