@@ -1,0 +1,53 @@
+{
+  "name": "maxgraf",
+  "version": "0.9.2",
+  "description": "Deprecated compatibility shim. Re-exports from pipegraf.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DesTincT/pipegraf.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DesTincT/pipegraf/issues"
+  },
+  "homepage": "https://github.com/DesTincT/pipegraf#readme",
+  "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./adapters/max": {
+      "types": "./dist/adapters/max/index.d.ts",
+      "import": "./dist/adapters/max/index.js",
+      "require": "./dist/adapters/max/index.cjs"
+    },
+    "./adapters/mock": {
+      "types": "./dist/adapters/mock/index.d.ts",
+      "import": "./dist/adapters/mock/index.js",
+      "require": "./dist/adapters/mock/index.cjs"
+    },
+    "./adapters/reference-adapter": {
+      "types": "./dist/adapters/reference-adapter/index.d.ts",
+      "import": "./dist/adapters/reference-adapter/index.js",
+      "require": "./dist/adapters/reference-adapter/index.cjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "pipegraf": "^0.9.1"
+  }
+}
