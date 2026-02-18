@@ -1,9 +1,5 @@
-import { Bot } from '../dist/core/bot.js';
+import { Bot, session, createStage, createWizard, createPollingTransport } from '../dist/index.js';
 import { createReferenceAdapter } from '../dist/adapters/reference-adapter/index.js';
-import { session } from '../dist/middleware/session.js';
-import { createStage } from '../dist/scenes/stage.js';
-import { createWizard } from '../dist/scenes/wizard.js';
-import { createPollingTransport } from '../dist/transports/polling.js';
 
 Bot.createPollingTransport = createPollingTransport;
 

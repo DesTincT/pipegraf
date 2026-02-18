@@ -49,6 +49,11 @@
       "types": "./dist/adapters/reference-adapter/index.d.ts",
       "import": "./dist/adapters/reference-adapter/index.js",
       "require": "./dist/adapters/reference-adapter/index.cjs"
+    },
+    "./adapters/telegram": {
+      "types": "./dist/adapters/telegram/index.d.ts",
+      "import": "./dist/adapters/telegram/index.js",
+      "require": "./dist/adapters/telegram/index.cjs"
     }
   },
   "publishConfig": {

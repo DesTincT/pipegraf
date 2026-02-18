@@ -1,8 +1,5 @@
-import { Bot } from '../dist/core/bot.js';
+import { Bot, session, createStage, createWizard } from '../dist/index.js';
 import { createReferenceAdapter } from '../dist/adapters/reference-adapter/index.js';
-import { session } from '../dist/middleware/session.js';
-import { createStage } from '../dist/scenes/stage.js';
-import { createWizard } from '../dist/scenes/wizard.js';
 
 function msg(text: string): unknown {
   return { message: { text }, chat_id: 1, user_id: 1 };
